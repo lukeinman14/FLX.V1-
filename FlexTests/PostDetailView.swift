@@ -1,7 +1,18 @@
 import SwiftUI
 
-struct PostDetailView: View {
-    let post: Post
+struct FlexPostModel: Hashable {
+    let author: Author
+    let text: String
+    let comments: [FlexCommentModel]
+}
+
+struct FlexCommentModel: Hashable {
+    let author: Author
+    let text: String
+}
+
+struct FlexPostDetailView: View {
+    let post: FlexPostModel
     @State private var newCommentText: String = ""
     
     var body: some View {
@@ -66,7 +77,7 @@ struct PostDetailView: View {
 }
 
 struct CommentRow: View {
-    let comment: Comment
+    let comment: FlexCommentModel
     
     var body: some View {
         HStack(spacing: 12) {

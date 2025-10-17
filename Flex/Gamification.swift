@@ -51,8 +51,8 @@ struct GamificationModel {
         }
         let current = tiers[currentIndex]
         let next = currentIndex + 1 < tiers.count ? tiers[currentIndex + 1] : nil
-        if let max = current.maxNetWorth {
-            let span = max - current.minNetWorth
+        if let upper = current.maxNetWorth {
+            let span = upper - current.minNetWorth
             let p = span > 0 ? (user.netWorthUSD - current.minNetWorth) / span : 1
             return (next, max(0, min(1, p)))
         } else {
@@ -62,11 +62,16 @@ struct GamificationModel {
 
     static let demo: GamificationModel = {
         let tiers: [Tier] = [
-            Tier(name: "Bronze", minNetWorth: 0, maxNetWorth: 5_000, color: Theme.accentMuted.opacity(0.6)),
-            Tier(name: "Silver", minNetWorth: 5_001, maxNetWorth: 10_000, color: Theme.accentMuted.opacity(0.7)),
-            Tier(name: "Gold", minNetWorth: 10_001, maxNetWorth: 25_000, color: Theme.accentMuted.opacity(0.85)),
-            Tier(name: "Platinum", minNetWorth: 25_001, maxNetWorth: 100_000, color: Theme.accentMuted),
-            Tier(name: "Diamond", minNetWorth: 100_001, maxNetWorth: nil, color: Theme.accent)
+            // Diamond – highest tier (1M+) – bright diamond blue
+            Tier(name: "Diamond", minNetWorth: 1_000_000, maxNetWorth: nil, color: Color(red: 0.70, green: 0.85, blue: 1.00)),
+            // Platinum – high tier (250K - 1M) – platinum silver
+            Tier(name: "Platinum", minNetWorth: 250_000, maxNetWorth: 999_999, color: Color(red: 0.85, green: 0.88, blue: 0.92)),
+            // Gold – mid-high tier (100K - 250K) – rich gold
+            Tier(name: "Gold", minNetWorth: 100_000, maxNetWorth: 249_999, color: Color(red: 0.98, green: 0.85, blue: 0.35)),
+            // Silver – mid tier (25K - 100K) – silver gray
+            Tier(name: "Silver", minNetWorth: 25_000, maxNetWorth: 99_999, color: Color(red: 0.75, green: 0.78, blue: 0.82)),
+            // Bronze – entry tier (0 - 25K) – bronze brown
+            Tier(name: "Bronze", minNetWorth: 0, maxNetWorth: 24_999, color: Color(red: 0.80, green: 0.50, blue: 0.20))
         ]
         return GamificationModel(tiers: tiers)
     }()

@@ -1,9 +1,10 @@
 import SwiftUI
+import Foundation
 
 struct HomeFeedView: View {
     var body: some View {
         NavigationStack {
-            List(MockData.posts) { post in
+            List(FlexMockData.posts) { post in
                 NavigationLink(value: post) {
                     PostRow(post: post)
                 }
@@ -12,7 +13,8 @@ struct HomeFeedView: View {
             .listStyle(.plain)
             .navigationTitle("Home")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                #if os(iOS)
+                ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         // Placeholder for search action
                     } label: {
@@ -20,17 +22,27 @@ struct HomeFeedView: View {
                             .foregroundColor(FlexTheme.secondaryText)
                     }
                 }
+                #else
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        // Placeholder for search action
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(FlexTheme.secondaryText)
+                    }
+                }
+                #endif
             }
             .background(FlexTheme.background.ignoresSafeArea())
         }
-        .navigationDestination(for: Post.self) { post in
-            PostDetailView(post: post)
+        .navigationDestination(for: FlexPost.self) { post in
+            FlexPostDetailView(post: post)
         }
     }
 }
 
 struct PostRow: View {
-    let post: Post
+    let post: FlexPost
 
     var body: some View {
         HStack(alignment: .top) {
@@ -63,10 +75,20 @@ struct PostRow: View {
                     Spacer()
                 }
 
-                Text(post.text)
+                Text(TickerFormat.normalizePrefixes(in: post.text))
                     .font(.callout)
                     .foregroundColor(FlexTheme.primaryText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
+                
+                let tickers = PostTextParser.extractStockTickers(from: post.text)
+                if let first = tickers.first {
+                    NavigationLink { StockChatView(symbol: first) } label: {
+                        MiniChartPreview(symbol: first)
+                            .padding(.top, 6)
+                    }
+                    .buttonStyle(.plain)
+                }
 
                 HStack(spacing: 16) {
                     HStack(spacing: 4) {
@@ -97,19 +119,21 @@ struct PostRow: View {
 
 // MARK: - Supporting Views and Models
 
-struct PostDetailView: View {
-    let post: Post
+struct FlexPostDetailView: View {
+    let post: FlexPost
 
     var body: some View {
         Text("Detail View for \(post.authorHandle)'s post")
             .navigationTitle("Post")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .foregroundColor(FlexTheme.primaryText)
             .background(FlexTheme.background.ignoresSafeArea())
     }
 }
 
-struct Post: Identifiable, Hashable {
+struct FlexPost: Identifiable, Hashable {
     let id: UUID
     let authorHandle: String
     let authorAvatarURL: String
@@ -119,29 +143,29 @@ struct Post: Identifiable, Hashable {
     let repostsCount: Int
 }
 
-struct MockData {
-    static let posts: [Post] = [
-        Post(id: UUID(),
-             authorHandle: "@alice",
-             authorAvatarURL: "https://i.pravatar.cc/150?img=1",
-             text: "This is a sample post from Alice. Loving the new SwiftUI features!",
-             upvotes: 45,
-             commentsCount: 12,
-             repostsCount: 4),
-        Post(id: UUID(),
-             authorHandle: "@bob",
-             authorAvatarURL: "https://i.pravatar.cc/150?img=2",
-             text: "Check out my latest blog post about Combine and its power.",
-             upvotes: 32,
-             commentsCount: 8,
-             repostsCount: 2),
-        Post(id: UUID(),
-             authorHandle: "@charlie",
-             authorAvatarURL: "https://i.pravatar.cc/150?img=3",
-             text: "Does anyone have tips for optimizing Swift code for performance?",
-             upvotes: 18,
-             commentsCount: 5,
-             repostsCount: 1)
+struct FlexMockData {
+    static let posts: [FlexPost] = [
+        FlexPost(id: UUID(),
+                 authorHandle: "@alice",
+                 authorAvatarURL: "https://i.pravatar.cc/150?img=1",
+                 text: "This is a sample post from Alice. Loving the new SwiftUI features!",
+                 upvotes: 45,
+                 commentsCount: 12,
+                 repostsCount: 4),
+        FlexPost(id: UUID(),
+                 authorHandle: "@bob",
+                 authorAvatarURL: "https://i.pravatar.cc/150?img=2",
+                 text: "Check out my latest blog post about Combine and its power.",
+                 upvotes: 32,
+                 commentsCount: 8,
+                 repostsCount: 2),
+        FlexPost(id: UUID(),
+                 authorHandle: "@charlie",
+                 authorAvatarURL: "https://i.pravatar.cc/150?img=3",
+                 text: "Does anyone have tips for optimizing Swift code for performance?",
+                 upvotes: 18,
+                 commentsCount: 5,
+                 repostsCount: 1)
     ]
 }
 

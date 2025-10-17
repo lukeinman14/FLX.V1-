@@ -29,6 +29,16 @@
 		37CDEDF52E978E0E00C04F80 /* FlexUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlexUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		A28F12182E9C3F0900BE732B /* Exceptions for "FlexTests" folder in "Flex" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Models.swift,
+			);
+			target = 37CDEDDD2E978E0D00C04F80 /* Flex */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		37CDEDE02E978E0D00C04F80 /* Flex */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -37,6 +47,9 @@
 		};
 		37CDEDEE2E978E0E00C04F80 /* FlexTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				A28F12182E9C3F0900BE732B /* Exceptions for "FlexTests" folder in "Flex" target */,
+			);
 			path = FlexTests;
 			sourceTree = "<group>";
 		};

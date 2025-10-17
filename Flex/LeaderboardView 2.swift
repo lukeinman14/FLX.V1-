@@ -1,12 +1,12 @@
 import SwiftUI
 
 struct LeaderboardRow: View {
-    var avatar: Image
+    var avatar: AnyView
     var name: String
     var amount: String
     var body: some View {
         HStack(spacing: 14) {
-            avatar.resizable().scaledToFill()
+            avatar
                 .frame(width: 44, height: 44)
                 .clipShape(Circle())
                 .overlay(Circle().stroke(Theme.divider, lineWidth: 1))
@@ -30,9 +30,9 @@ struct TierHeader: View {
             Spacer()
             Text(tier.rangeDescription)
                 .font(Theme.smallFont())
-                .foregroundStyle(Theme.textSecondary)
+                .foregroundStyle(tier.color.opacity(0.8))
             if locked {
-                Image(systemName: "lock.fill").foregroundStyle(Theme.textSecondary)
+                Image(systemName: "lock.fill").foregroundStyle(tier.color.opacity(0.8))
             }
         }
         .padding(.vertical, 4)
@@ -48,6 +48,20 @@ struct ProgressCard: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title).font(Theme.headingFont()).foregroundStyle(Theme.accentMuted)
             Text(subtitle).font(Theme.smallFont()).foregroundStyle(Theme.textSecondary)
+            // Numeric anchors and current %
+            HStack {
+                Text("0%")
+                    .font(Theme.smallFont())
+                    .foregroundStyle(Theme.textSecondary)
+                Spacer()
+                Text("\(Int(progress * 100))%")
+                    .font(Theme.smallFont())
+                    .foregroundStyle(Theme.accentMuted)
+                Spacer()
+                Text("100%")
+                    .font(Theme.smallFont())
+                    .foregroundStyle(Theme.textSecondary)
+            }
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: 10).fill(Theme.surface)
@@ -68,41 +82,36 @@ struct ProgressCard: View {
 }
 
 struct LeaderboardView: View {
-    @Environment(\.tabSelection) private var tabSelection
+    @Environment(\.shimTabSelection) private var shimTabSelection
+    @Environment(PlayerState.self) private var player
 
     private let model = GamificationModel.demo
-    private let user = UserProfile(username: "u/You", netWorthUSD: 8_200)
+    private let userDataManager = UserDataManager.shared
     @State private var isLoading = true
 
     var body: some View {
-        let current = model.currentTier(for: user)
-        let progressInfo = model.nextTierProgress(for: user)
+        let current = model.currentTier(for: player.profile)
+        let progressInfo = model.nextTierProgress(for: player.profile)
 
         ZStack(alignment: .topLeading) {
             VStack(spacing: 0) {
                 header
                 if isLoading {
                     loadingPlaceholder
-                        .transition(.opacity.combined(with: .move(edge: .top)))
+                        .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
                 } else {
                     listContent(current: current, progressInfo: progressInfo)
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                        .transition(AnyTransition.opacity.combined(with: .move(edge: .bottom)))
                 }
             }
-            backFloatingButton
         }
         .background(Theme.bg.ignoresSafeArea())
         .navigationTitle("Leaderboard")
-        .navigationBarTitleDisplayMode(.inline)
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(Theme.bg, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button(action: { tabSelection?.wrappedValue = 0 }) {
-                    Image(systemName: "chevron.left").font(.system(size: 18, weight: .semibold)).foregroundStyle(Theme.accentMuted)
-                }
-            }
-        }
+        #endif
         .onAppear {
             if isLoading {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
@@ -124,7 +133,8 @@ struct LeaderboardView: View {
             }
 
             ForEach(model.tiers) { tier in
-                let locked = !(tier.contains(user.netWorthUSD)) && (tier.minNetWorth > user.netWorthUSD)
+                let locked = !(tier.contains(player.profile.netWorthUSD)) && (tier.minNetWorth > player.profile.netWorthUSD)
+                let usersInTier = userDataManager.getUsersInTier(tier)
                 Section(header: TierHeader(tier: tier, locked: locked)) {
                     if locked {
                         HStack {
@@ -138,9 +148,18 @@ struct LeaderboardView: View {
                         .padding(.vertical, 12)
                         .listRowBackground(Theme.bg)
                     } else {
-                        NavigationLink { ProfileView(username: "u AnonFin", accent: tier.color) } label: { colorCodedRow(name: "u AnonFin", amount: "$10 M ▲", color: tier.color) }
-                        NavigationLink { ProfileView(username: "u ByteWhale", accent: tier.color) } label: { colorCodedRow(name: "u ByteWhale", amount: "8,45 M", color: tier.color) }
-                        NavigationLink { ProfileView(username: "u MuadDib", accent: tier.color) } label: { colorCodedRow(name: "u MuadDib", amount: "6,12 M", color: tier.color) }
+                        ForEach(Array(usersInTier.enumerated()), id: \.element.username) { index, userProfile in
+                            NavigationLink {
+                                ProfileView(username: userProfile.username, accent: tier.color)
+                            } label: {
+                                colorCodedRow(
+                                    username: userProfile.username,
+                                    name: userProfile.username.withoutUsernamePrefix,
+                                    amount: userDataManager.formatNetWorth(userProfile.netWorthUSD) + (index == 0 ? " ▲" : ""),
+                                    color: tier.color
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -151,7 +170,11 @@ struct LeaderboardView: View {
                 .foregroundStyle(Theme.accentMuted)
                 .listRowBackground(Theme.bg)
         }
+#if os(iOS)
         .listStyle(.insetGrouped)
+#else
+        .listStyle(.sidebar)
+#endif
         .scrollContentBackground(.hidden)
         .tint(Theme.accentMuted)
         .environment(\.defaultMinListRowHeight, 64)
@@ -169,20 +192,8 @@ struct LeaderboardView: View {
         .shimmering()
     }
 
-    private var backFloatingButton: some View {
-        Button(action: { tabSelection?.wrappedValue = 0 }) {
-            Image(systemName: "chevron.left")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(Theme.bg)
-                .padding(10)
-                .background(Circle().fill(Theme.accentMuted))
-        }
-        .padding(.leading, 12)
-        .padding(.top, 8)
-    }
-
-    private func colorCodedRow(name: String, amount: String, color: Color) -> some View {
-        LeaderboardRow(avatar: Image(systemName: "person.crop.circle"), name: name, amount: amount)
+    private func colorCodedRow(username: String, name: String, amount: String, color: Color) -> some View {
+        LeaderboardRow(avatar: AnyView(AvatarHelper.avatarView(for: username, size: 44)), name: name, amount: amount)
             .listRowBackground(Theme.bg)
             .overlay(alignment: .leading) { Rectangle().fill(color.opacity(0.6)).frame(width: 4) }
             .tint(color)
@@ -190,11 +201,6 @@ struct LeaderboardView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            Button(action: { tabSelection?.wrappedValue = 0 }) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(Theme.accentMuted)
-            }
             Text("Leaderboard")
                 .font(Theme.headingFont())
                 .foregroundStyle(Theme.accentMuted)
@@ -203,7 +209,7 @@ struct LeaderboardView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(Theme.bg)
-        .overlay(Rectangle().frame(height: 1).foregroundStyle(Theme.divider), alignment: .bottom)
+        .overlay(Rectangle().frame(height: 1).foregroundStyle(Theme.divider), alignment: Alignment.bottom)
     }
 
     private func progressSubtitle(current: Tier?, next: Tier?) -> String {
@@ -218,7 +224,7 @@ private struct Shimmer: ViewModifier {
     func body(content: Content) -> some View {
         content
             .overlay(
-                LinearGradient(gradient: Gradient(colors: [.clear, Theme.accent.opacity(0.2), .clear]), startPoint: .leading, endPoint: .trailing)
+                LinearGradient(gradient: Gradient(colors: [Color.clear, Theme.accent.opacity(0.2), Color.clear]), startPoint: .leading, endPoint: .trailing)
                     .rotationEffect(.degrees(10))
                     .offset(x: phase)
             )

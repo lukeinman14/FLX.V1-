@@ -4,8 +4,32 @@ import SwiftUI
 struct FlexApp: App {
     var body: some Scene {
         WindowGroup {
-            RootTabView()
+            RootWithSplash()
         }
+    }
+}
+
+struct RootWithSplash: View {
+    @State private var showSplash: Bool = true
+
+    var body: some View {
+        ZStack {
+            RootTabView()
+                .opacity(showSplash ? 0 : 1)
+            if showSplash {
+                SplashView()
+                    .transition(.opacity.combined(with: .scale))
+                    .onAppear {
+                        // Keep splash for a short moment, then fade
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+                            withAnimation(.easeOut(duration: 0.4)) {
+                                showSplash = false
+                            }
+                        }
+                    }
+            }
+        }
+        .preferredColorScheme(.dark)
     }
 }
 

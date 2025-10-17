@@ -9,16 +9,16 @@ public struct SplashView: View {
     
     public var body: some View {
         ZStack {
-            (Theme.bg ?? Color.black.opacity(0.95))
+            Theme.bg
                 .ignoresSafeArea()
             
             Image(systemName: "infinity")
                 .font(.system(size: 96, weight: .bold))
-                .foregroundColor(Theme.accent ?? .white)
+                .foregroundColor(Theme.accent)
                 .scaleEffect(scale)
                 .opacity(opacity)
                 .rotationEffect(.degrees(rotation))
-                .shadow(color: (Theme.accent ?? .white).opacity(0.6), radius: 10, x: 0, y: 0)
+                .shadow(color: Theme.accent.opacity(0.6), radius: 10, x: 0, y: 0)
                 .accessibilityLabel("Loading")
                 .onAppear {
                     withAnimation(Animation.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {

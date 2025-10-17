@@ -129,26 +129,12 @@ private struct OwlRefreshView: View {
     }
 }
 
-// MARK: - Preview
-
-struct OwlRefreshContainer_Previews: PreviewProvider {
-    static var previews: some View {
-        OwlRefreshContainer {
-            await fakeRefresh()
-        } content: {
-            LazyVStack(spacing: 0) {
-                ForEach(0..<30, id: \.self) { i in
-                    Text("Row \(i + 1)")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(i % 2 == 0 ? Color(UIColor.secondarySystemBackground) : Color(UIColor.systemBackground))
-                }
-            }
+#Preview("Owl Refresh Demo") {
+    if #available(iOS 17.0, *) {
+        OwlRefreshContainer(onRefresh: { try? await Task.sleep(nanoseconds: 500_000_000) }) {
+            List(0..<10, id: \.self) { i in Text("Row \(i)") }
         }
-        .background(Color(UIColor.systemGroupedBackground))
-    }
-
-    static func fakeRefresh() async {
-        try? await Task.sleep(nanoseconds: 1_500_000_000)
+    } else {
+        Text("Preview requires iOS 17+")
     }
 }

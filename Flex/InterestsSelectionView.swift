@@ -17,8 +17,8 @@ struct InterestSelectionView: View {
     var body: some View {
         VStack(spacing: 24) {
             Text("Select Your Interests")
-                .font(.title2)
-                .fontWeight(.semibold)
+                .font(Theme.headingFont())
+                .foregroundStyle(Theme.accentMuted)
                 .padding(.top, 24)
             
             ScrollView {
@@ -29,12 +29,13 @@ struct InterestSelectionView: View {
                         }) {
                             Text(interest)
                                 .font(.body)
-                                .foregroundColor(selectedInterests.contains(interest) ? .white : .primary)
+                                .foregroundStyle(selectedInterests.contains(interest) ? Theme.textPrimary : Theme.textSecondary)
                                 .padding(.vertical, 10)
                                 .padding(.horizontal, 16)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 20)
-                                        .fill(selectedInterests.contains(interest) ? Color.accentColor : Color(.systemGray5))
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .fill(selectedInterests.contains(interest) ? Theme.surfaceElevated : Theme.surface)
+                                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Theme.divider, lineWidth: 1))
                                 )
                         }
                         .buttonStyle(PlainButtonStyle())
@@ -50,14 +51,18 @@ struct InterestSelectionView: View {
                     .fontWeight(.semibold)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(selectedInterests.isEmpty ? Color.gray.opacity(0.5) : Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(Theme.surface)
+                            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Theme.divider, lineWidth: 1))
+                    )
+                    .foregroundStyle(Theme.accentMuted)
                     .padding(.horizontal, 24)
             }
             .disabled(selectedInterests.isEmpty)
             .padding(.bottom, 24)
         }
+        .background(Theme.bg.ignoresSafeArea())
     }
     
     private func toggleInterest(_ interest: String) {

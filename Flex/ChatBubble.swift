@@ -16,7 +16,7 @@ struct ChatBubble: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Theme.divider.opacity(0.35), lineWidth: 1)
+                    .stroke(Color(Theme.divider).opacity(0.35), lineWidth: 1)
             )
             .frame(maxWidth: .infinity, alignment: isMine ? .trailing : .leading)
             .padding(.horizontal, 16)

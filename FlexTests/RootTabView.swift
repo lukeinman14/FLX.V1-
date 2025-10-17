@@ -33,5 +33,6 @@ struct RootTabView: View {
         }
         .accentColor(FlexTheme.accent)
         .background(screenBG())
+        .owlRefreshEnabled()
     }
 }

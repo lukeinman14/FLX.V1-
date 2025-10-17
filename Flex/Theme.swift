@@ -30,3 +30,15 @@ extension View {
         modifier(NeonStyle(foreground: color))
     }
 }
+
+extension String {
+    /// Removes the "u/" prefix from usernames for display
+    var withoutUsernamePrefix: String {
+        self.replacingOccurrences(of: "u/", with: "")
+    }
+
+    /// Ensures username has "u/" prefix for internal use
+    var withUsernamePrefix: String {
+        self.hasPrefix("u/") ? self : "u/\(self)"
+    }
+}

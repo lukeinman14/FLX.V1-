@@ -49,8 +49,12 @@ struct NotificationsView: View {
             .background(Theme.bg)
         }
         .navigationTitle("Notifications")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.large)
         .toolbarBackground(Theme.bg, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
+        .toolbarVisibility(.visible, for: .tabBar)
+        #endif
         .background(Theme.bg.ignoresSafeArea())
     }
 
