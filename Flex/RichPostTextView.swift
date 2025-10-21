@@ -21,6 +21,7 @@ struct RichPostTextView: View {
         VStack(spacing: 0) {
             // Build attributed text with tappable links
             Text(makeAttributedString())
+                .font(.system(size: 16, weight: .regular, design: .rounded))
                 .multilineTextAlignment(.leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .environment(\.openURL, OpenURLAction { url in
@@ -60,13 +61,11 @@ struct RichPostTextView: View {
             case .ticker(let sym):
                 var ticker = AttributedString("$" + sym)
                 ticker.foregroundColor = Theme.accentMuted
-                ticker.underlineStyle = .single
                 ticker.link = URL(string: "ticker://\(sym)")
                 result.append(ticker)
             case .hashtag(let tag):
                 var hashtag = AttributedString("#" + tag)
                 hashtag.foregroundColor = Theme.accentMuted
-                hashtag.underlineStyle = .single
                 hashtag.link = URL(string: "hashtag://\(tag)")
                 result.append(hashtag)
             }

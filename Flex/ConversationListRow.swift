@@ -17,7 +17,7 @@ struct ConversationListRow: View {
             }) {
                 ZStack(alignment: .topTrailing) {
                     avatar
-                        .frame(width: 48, height: 48)
+                        .frame(width: 60, height: 60)
                         .clipShape(Circle())
                         .overlay(Circle().stroke(Theme.divider, lineWidth: 1))
 
@@ -57,11 +57,10 @@ struct ConversationListRow: View {
 
                 Text(timestamp.timeAgo())
                     .font(.caption2)
-                    .foregroundColor(Color(red: 0.1, green: 1.0, blue: 0.4)) // Neon green
+                    .foregroundColor(Theme.textSecondary)
             }
         }
         .padding(.vertical, 12)
-        .padding(.horizontal, 16)
         .background(Theme.bg)
     }
 }

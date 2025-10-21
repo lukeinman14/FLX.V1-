@@ -116,7 +116,6 @@ struct HashtagDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Theme.bg, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .toolbarVisibility(.visible, for: .tabBar)
         #endif
         .sheet(isPresented: $showShareSheet) {
             if let post = selectedPost {
@@ -126,6 +125,9 @@ struct HashtagDetailView: View {
                 )
             }
         }
+        #if os(iOS)
+        .toolbarVisibility(.visible, for: .tabBar)
+        #endif
     }
 }
 

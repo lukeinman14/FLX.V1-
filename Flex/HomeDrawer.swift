@@ -26,7 +26,11 @@ struct HomeDrawer<Content: View>: View {
         ZStack(alignment: .leading) {
             content
                 .disabled(isOpen)
-                .overlay { if isOpen { Color.black.opacity(0.3).ignoresSafeArea().onTapGesture { withAnimation(.spring()) { isOpen = false } } } }
+                .overlay {
+                    if isOpen {
+                        Color.black.opacity(0.3).ignoresSafeArea().onTapGesture { withAnimation(.spring()) { isOpen = false } }
+                    }
+                }
                 .gesture(mainDrag)
             
             GeometryReader { geometry in
@@ -47,58 +51,79 @@ struct HomeDrawer<Content: View>: View {
     }
 
     private var drawer: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                // Small owl logo watermark
-                OwlLogo()
-                    .frame(width: 24, height: 24)
-                    .opacity(0.7)
-                
-                Text("Quick Access")
-                    .font(Theme.headingFont())
-                    .foregroundStyle(Theme.accentMuted)
+        GeometryReader { geometry in
+            VStack(alignment: .leading, spacing: 0) {
+                // Add top spacing to push content down (reduced by 10%)
                 Spacer()
-                Button(action: { withAnimation(.spring()) { isOpen = false } }) {
-                    Image(systemName: "xmark").font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.accentMuted)
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(Theme.bg)
-            .overlay(Rectangle().frame(height: 1).foregroundStyle(Theme.divider), alignment: .bottom)
+                    .frame(height: geometry.size.height * 0.0)
 
-            List {
-                ForEach(items) { item in
-                    Button(action: {
-                        withAnimation(.spring()) { isOpen = false }
-                        item.action()
-                    }) {
-                        HStack(spacing: 12) {
-                            Image(systemName: item.systemImage).foregroundStyle(Theme.accentMuted)
-                            Text(item.title).font(Theme.bodyFont()).foregroundStyle(Theme.textPrimary)
-                            Spacer()
-                            Image(systemName: "chevron.right").font(.system(size: 14, weight: .semibold)).foregroundStyle(Theme.divider)
+                VStack(spacing: 0) {
+                    // Spacing to push logo down 5%
+                    Spacer()
+                        .frame(height: geometry.size.height * 0.05)
+
+                    HStack {
+                        Spacer()
+                        Button(action: { withAnimation(.spring()) { isOpen = false } }) {
+                            Image(systemName: "xmark").font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.accentMuted)
                         }
-                        .padding(.vertical, 8)
+                        .padding(.trailing, 16)
+                        .padding(.top, 12)
                     }
-                    .listRowBackground(Theme.bg)
+
+                    // Flex Owl Logo
+                    HStack {
+                        Spacer()
+                        Image("flex-owl-logo")
+                            .resizable()
+                            .renderingMode(.template)
+                            .foregroundColor(Color(red: 0.45, green: 0.58, blue: 0.45))
+                            .aspectRatio(contentMode: .fit)
+                            .frame(height: 120)
+                        Spacer()
+                    }
+                    .padding(.vertical, 10)
                 }
-            }
+
+                List {
+                    ForEach(items) { item in
+                        Button(action: {
+                            withAnimation(.spring()) { isOpen = false }
+                            item.action()
+                        }) {
+                            HStack(spacing: 12) {
+                                Image(systemName: item.systemImage).foregroundStyle(Theme.accentMuted)
+                                Text(item.title).font(Theme.bodyFont()).foregroundStyle(Theme.textPrimary)
+                                Spacer()
+                                Image(systemName: "chevron.right").font(.system(size: 14, weight: .semibold)).foregroundStyle(Theme.divider)
+                            }
+                            .padding(.vertical, 8)
+                        }
+                        .listRowBackground(Color.clear)
+                    }
+                }
 #if os(iOS)
-            .listStyle(.insetGrouped)
+                .listStyle(.plain)
 #else
-            .listStyle(.sidebar)
+                .listStyle(.sidebar)
 #endif
-            .scrollContentBackground(.hidden)
-            .background(Theme.bg)
-            Spacer(minLength: 0)
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
+
+                Spacer(minLength: 0)
+
+                // Dark Mode Toggle at bottom
+                DarkModeToggle()
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 20)
+            }
+            .frame(width: width)
+            .frame(maxHeight: .infinity)
         }
         .frame(width: width)
-        .frame(maxHeight: .infinity)
-        .background(Theme.surfaceElevated)
-        .overlay(Rectangle().frame(width: 1).foregroundStyle(Theme.divider), alignment: .trailing)
+        .background(.ultraThinMaterial)
         .ignoresSafeArea(edges: .vertical)
-        .shadow(color: .black.opacity(0.25), radius: 12, x: 8, y: 0)
+        .shadow(color: .black.opacity(0.3), radius: 20, x: 8, y: 0)
     }
 
     private var mainDrag: some Gesture {
@@ -187,9 +212,17 @@ struct AppNotificationsScreen: View {
     }
 }
 
+// MARK: - AppSettings Manager
+@Observable
+class AppSettings {
+    static let shared = AppSettings()
+    var isDarkMode: Bool = true
+}
+
 struct AppSettingsView: View {
     @State private var showLoggedOut = false
     @State private var isRefreshing = false
+    @State private var settings = AppSettings.shared
 
     var body: some View {
         Form {
@@ -582,61 +615,306 @@ struct ConnectExchangesView: View {
     }
 }
 
-// MARK: - Owl Logo Component
-struct OwlLogo: View {
+// MARK: - Walking Owl Animation
+struct WalkingOwlAnimation: View {
+    @State private var owlPosition: CGFloat = -50
+    @State private var isWalking = false
+
+    let forestGreen = Color(red: 0.45, green: 0.58, blue: 0.45)
+
     var body: some View {
-        ZStack {
-            // Outer circle
-            Circle()
-                .stroke(Color(red: 0.1, green: 1.0, blue: 0.4), lineWidth: 1.5)
-                .opacity(0.8)
-            
-            // Inner owl design
-            VStack(spacing: 1) {
-                // Owl ears/horns
-                HStack(spacing: 8) {
-                    Path { path in
-                        path.move(to: CGPoint(x: 2, y: 8))
-                        path.addLine(to: CGPoint(x: 6, y: 2))
-                        path.addLine(to: CGPoint(x: 8, y: 8))
-                    }
-                    .stroke(Color(red: 0.1, green: 1.0, blue: 0.4), lineWidth: 1.2)
-                    .frame(width: 10, height: 8)
-                    
-                    Path { path in
-                        path.move(to: CGPoint(x: 2, y: 8))
-                        path.addLine(to: CGPoint(x: 4, y: 2))
-                        path.addLine(to: CGPoint(x: 8, y: 8))
-                    }
-                    .stroke(Color(red: 0.1, green: 1.0, blue: 0.4), lineWidth: 1.2)
-                    .frame(width: 10, height: 8)
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                // Branch
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(forestGreen.opacity(0.6))
+                    .frame(height: 4)
+                    .offset(y: 30)
+
+                // Animated Owl
+                AnimatedOwl(isWalking: isWalking, color: forestGreen)
+                    .frame(width: 40, height: 50)
+                    .offset(x: owlPosition, y: 5)
+            }
+        }
+        .onAppear {
+            // Start walking animation
+            withAnimation(.linear(duration: 4).repeatForever(autoreverses: false)) {
+                owlPosition = UIScreen.main.bounds.width
+            }
+
+            // Walking step animation
+            withAnimation(.linear(duration: 0.3).repeatForever(autoreverses: true)) {
+                isWalking.toggle()
+            }
+        }
+    }
+}
+
+struct AnimatedOwl: View {
+    let isWalking: Bool
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 2) {
+            // Owl ears/tufts
+            HStack(spacing: 8) {
+                Path { path in
+                    path.move(to: CGPoint(x: 0, y: 8))
+                    path.addLine(to: CGPoint(x: 3, y: 0))
+                    path.addLine(to: CGPoint(x: 6, y: 8))
                 }
-                
-                // Eyes
-                HStack(spacing: 4) {
-                    Circle()
-                        .stroke(Color(red: 0.1, green: 1.0, blue: 0.4), lineWidth: 1)
-                        .frame(width: 4, height: 4)
-                    Circle()
-                        .stroke(Color(red: 0.1, green: 1.0, blue: 0.4), lineWidth: 1)
-                        .frame(width: 4, height: 4)
+                .stroke(color, lineWidth: 2)
+                .frame(width: 6, height: 8)
+
+                Path { path in
+                    path.move(to: CGPoint(x: 0, y: 8))
+                    path.addLine(to: CGPoint(x: 3, y: 0))
+                    path.addLine(to: CGPoint(x: 6, y: 8))
                 }
-                
+                .stroke(color, lineWidth: 2)
+                .frame(width: 6, height: 8)
+            }
+
+            // Head with eyes
+            ZStack {
+                Circle()
+                    .fill(color)
+                    .frame(width: 24, height: 24)
+
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(.white)
+                        .frame(width: 6, height: 6)
+                    Circle()
+                        .fill(.white)
+                        .frame(width: 6, height: 6)
+                }
+
                 // Beak
                 Path { path in
                     path.move(to: CGPoint(x: 0, y: 0))
-                    path.addLine(to: CGPoint(x: 2, y: 4))
+                    path.addLine(to: CGPoint(x: 2, y: 5))
                     path.addLine(to: CGPoint(x: 4, y: 0))
                 }
-                .stroke(Color(red: 0.1, green: 1.0, blue: 0.4), lineWidth: 1)
-                .frame(width: 4, height: 4)
-                
-                // Body outline
-                RoundedRectangle(cornerRadius: 3)
-                    .stroke(Color(red: 0.1, green: 1.0, blue: 0.4), lineWidth: 1)
-                    .frame(width: 8, height: 6)
+                .fill(Color.orange.opacity(0.8))
+                .frame(width: 4, height: 5)
+                .offset(y: 8)
+            }
+
+            // Body
+            RoundedRectangle(cornerRadius: 8)
+                .fill(color)
+                .frame(width: 20, height: 16)
+
+            // Legs (animated walking)
+            HStack(spacing: 6) {
+                Rectangle()
+                    .fill(color)
+                    .frame(width: 2, height: isWalking ? 8 : 6)
+                Rectangle()
+                    .fill(color)
+                    .frame(width: 2, height: isWalking ? 6 : 8)
             }
         }
-        .frame(width: 24, height: 24)
+    }
+}
+
+// MARK: - Dark Mode Toggle
+struct DarkModeToggle: View {
+    @State private var settings = AppSettings.shared
+    @State private var isAnimating = false
+
+    let forestGreen = Color(red: 0.45, green: 0.58, blue: 0.45)
+
+    var body: some View {
+        Button(action: {
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
+                settings.isDarkMode.toggle()
+                isAnimating = true
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                isAnimating = false
+            }
+        }) {
+            HStack(spacing: 8) {
+                // Animated icon
+                if settings.isDarkMode {
+                    // Moon icon
+                    Image(systemName: "moon.stars.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(forestGreen)
+                        .rotationEffect(.degrees(isAnimating ? 360 : 0))
+                        .scaleEffect(isAnimating ? 1.1 : 1.0)
+                } else {
+                    // Sun icon
+                    Image(systemName: "sun.max.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(.orange)
+                        .rotationEffect(.degrees(isAnimating ? 180 : 0))
+                        .scaleEffect(isAnimating ? 1.1 : 1.0)
+                }
+
+                Text(settings.isDarkMode ? "Dark Mode" : "Light Mode")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(settings.isDarkMode ? forestGreen : .orange)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.2),
+                                Color.white.opacity(0.05)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Flex Owl Logo
+struct FlexOwlLogo: View {
+    let forestGreen = Color(red: 0.45, green: 0.58, blue: 0.45)
+
+    var body: some View {
+        GeometryReader { geometry in
+            let size = geometry.size.height
+
+            ZStack {
+                // Outer circle
+                Circle()
+                    .stroke(forestGreen, lineWidth: size * 0.025)
+                    .frame(width: size * 0.85, height: size * 0.85)
+
+                // Inner circle
+                Circle()
+                    .stroke(forestGreen, lineWidth: size * 0.02)
+                    .frame(width: size * 0.65, height: size * 0.65)
+
+                // Owl body
+                VStack(spacing: 0) {
+                    // Ear tufts
+                    HStack(spacing: size * 0.08) {
+                        // Left ear
+                        Path { path in
+                            path.move(to: CGPoint(x: 0, y: size * 0.08))
+                            path.addLine(to: CGPoint(x: size * 0.03, y: 0))
+                            path.addLine(to: CGPoint(x: size * 0.06, y: size * 0.08))
+                        }
+                        .stroke(forestGreen, lineWidth: size * 0.015)
+
+                        // Right ear
+                        Path { path in
+                            path.move(to: CGPoint(x: 0, y: size * 0.08))
+                            path.addLine(to: CGPoint(x: size * 0.03, y: 0))
+                            path.addLine(to: CGPoint(x: size * 0.06, y: size * 0.08))
+                        }
+                        .stroke(forestGreen, lineWidth: size * 0.015)
+                    }
+                    .offset(y: -size * 0.15)
+
+                    // Eyes (angry/wise expression)
+                    HStack(spacing: size * 0.06) {
+                        // Left eye
+                        ZStack {
+                            Circle()
+                                .stroke(forestGreen, lineWidth: size * 0.015)
+                                .frame(width: size * 0.12, height: size * 0.12)
+                            // Pupil
+                            Circle()
+                                .fill(forestGreen)
+                                .frame(width: size * 0.05, height: size * 0.05)
+                        }
+
+                        // Right eye
+                        ZStack {
+                            Circle()
+                                .stroke(forestGreen, lineWidth: size * 0.015)
+                                .frame(width: size * 0.12, height: size * 0.12)
+                            // Pupil
+                            Circle()
+                                .fill(forestGreen)
+                                .frame(width: size * 0.05, height: size * 0.05)
+                        }
+                    }
+                    .offset(y: -size * 0.08)
+
+                    // Beak
+                    Path { path in
+                        path.move(to: CGPoint(x: 0, y: 0))
+                        path.addLine(to: CGPoint(x: size * 0.025, y: size * 0.05))
+                        path.addLine(to: CGPoint(x: size * 0.05, y: 0))
+                    }
+                    .stroke(forestGreen, lineWidth: size * 0.015)
+                    .offset(y: -size * 0.02)
+
+                    // "FLEX" text on body
+                    Text("FLEX")
+                        .font(.system(size: size * 0.12, weight: .bold, design: .monospaced))
+                        .foregroundColor(forestGreen)
+                        .offset(y: size * 0.08)
+
+                    // Wing with feather detail
+                    ZStack {
+                        // Wing outline
+                        Path { path in
+                            path.move(to: CGPoint(x: size * 0.15, y: 0))
+                            path.addCurve(
+                                to: CGPoint(x: size * 0.05, y: size * 0.25),
+                                control1: CGPoint(x: size * 0.02, y: size * 0.08),
+                                control2: CGPoint(x: 0, y: size * 0.18)
+                            )
+                        }
+                        .stroke(forestGreen, lineWidth: size * 0.015)
+
+                        // Feather lines
+                        VStack(spacing: size * 0.015) {
+                            ForEach(0..<4) { i in
+                                Path { path in
+                                    let yOffset = CGFloat(i) * size * 0.05
+                                    path.move(to: CGPoint(x: size * 0.08, y: yOffset))
+                                    path.addLine(to: CGPoint(x: size * 0.13, y: yOffset + size * 0.02))
+                                }
+                                .stroke(forestGreen, lineWidth: size * 0.01)
+                            }
+                        }
+                        .offset(x: -size * 0.05, y: size * 0.08)
+                    }
+                    .offset(x: -size * 0.12, y: size * 0.15)
+
+                    // Feet
+                    HStack(spacing: size * 0.08) {
+                        // Left foot
+                        Path { path in
+                            path.move(to: CGPoint(x: 0, y: 0))
+                            path.addLine(to: CGPoint(x: size * 0.02, y: size * 0.04))
+                            path.addLine(to: CGPoint(x: size * 0.04, y: size * 0.04))
+                        }
+                        .stroke(forestGreen, lineWidth: size * 0.012)
+
+                        // Right foot
+                        Path { path in
+                            path.move(to: CGPoint(x: 0, y: 0))
+                            path.addLine(to: CGPoint(x: size * 0.02, y: size * 0.04))
+                            path.addLine(to: CGPoint(x: size * 0.04, y: size * 0.04))
+                        }
+                        .stroke(forestGreen, lineWidth: size * 0.012)
+                    }
+                    .offset(y: size * 0.35)
+                }
+            }
+        }
+        .aspectRatio(1, contentMode: .fit)
     }
 }

@@ -95,7 +95,17 @@ struct LeaderboardView: View {
 
         ZStack(alignment: .topLeading) {
             VStack(spacing: 0) {
-                header
+                // Custom title header
+                HStack {
+                    Spacer()
+                    Text("Leaderboard")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(Theme.textPrimary)
+                    Spacer()
+                }
+                .frame(height: 44)
+                .background(Theme.bg)
+
                 if isLoading {
                     loadingPlaceholder
                         .transition(AnyTransition.opacity.combined(with: .move(edge: .top)))
@@ -108,7 +118,7 @@ struct LeaderboardView: View {
         .background(Theme.bg.ignoresSafeArea())
         .navigationTitle("Leaderboard")
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Theme.bg, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         #endif
@@ -197,19 +207,6 @@ struct LeaderboardView: View {
             .listRowBackground(Theme.bg)
             .overlay(alignment: .leading) { Rectangle().fill(color.opacity(0.6)).frame(width: 4) }
             .tint(color)
-    }
-
-    private var header: some View {
-        HStack(spacing: 12) {
-            Text("Leaderboard")
-                .font(Theme.headingFont())
-                .foregroundStyle(Theme.accentMuted)
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(Theme.bg)
-        .overlay(Rectangle().frame(height: 1).foregroundStyle(Theme.divider), alignment: Alignment.bottom)
     }
 
     private func progressSubtitle(current: Tier?, next: Tier?) -> String {

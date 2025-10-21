@@ -89,6 +89,7 @@ struct ShareSheet: View {
         }
         .presentationDetents([.medium])
         .presentationDragIndicator(.visible)
+        .preferredColorScheme(.dark)
     }
 
     private func shareViaMessages() {
@@ -246,6 +247,7 @@ struct SendToUserSheet: View {
                 }
             }
         }
+        .preferredColorScheme(.dark)
     }
 
     private func sendToUser(_ user: String) {

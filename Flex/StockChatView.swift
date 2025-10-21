@@ -137,7 +137,6 @@ struct StockChatView: View {
         #if os(iOS)
         .toolbarBackground(Theme.bg, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .toolbarVisibility(.visible, for: .tabBar)
         #endif
         .sheet(item: $selectedEvent) { ev in
             VStack(spacing: 12) {

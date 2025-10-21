@@ -20,8 +20,19 @@ struct ArenaListView: View {
     var body: some View {
         let progressInfo = GamificationModel.demo.nextTierProgress(for: player.profile)
         let currentTier = GamificationModel.demo.currentTier(for: player.profile)
-        
+
         VStack(spacing: 0) {
+            // Custom title header
+            HStack {
+                Spacer()
+                Text("Activity")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                Spacer()
+            }
+            .frame(height: 44)
+            .background(Theme.bg)
+
             header
             List {
                 Section("Progress") {
@@ -102,10 +113,9 @@ struct ArenaListView: View {
         }
         .navigationTitle("Activity")
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Theme.bg, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .toolbarVisibility(.visible, for: .tabBar)
         #endif
     }
 

@@ -22,6 +22,17 @@ struct NotificationsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Custom header
+            HStack {
+                Spacer()
+                Text("Notifications")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(Theme.textPrimary)
+                Spacer()
+            }
+            .frame(height: 44)
+            .background(Theme.bg)
+
             segmented
             List(filtered(items)) { item in
                 HStack(alignment: .top, spacing: 12) {
@@ -50,10 +61,9 @@ struct NotificationsView: View {
         }
         .navigationTitle("Notifications")
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Theme.bg, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .toolbarVisibility(.visible, for: .tabBar)
         #endif
         .background(Theme.bg.ignoresSafeArea())
     }

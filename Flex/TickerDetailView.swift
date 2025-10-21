@@ -165,7 +165,6 @@ struct TickerDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(Theme.bg, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .toolbarVisibility(.visible, for: .tabBar)
         #endif
         .task {
             await api.fetchStockData(symbol: symbol)
@@ -178,6 +177,9 @@ struct TickerDetailView: View {
                 )
             }
         }
+        #if os(iOS)
+        .toolbarVisibility(.visible, for: .tabBar)
+        #endif
     }
 }
 

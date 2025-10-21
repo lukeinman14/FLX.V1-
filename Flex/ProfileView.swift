@@ -66,7 +66,6 @@ struct ProfileView: View {
         .navigationBarHidden(true)
         #if os(iOS)
         .ignoresSafeArea(edges: .top)
-        .toolbarVisibility(.visible, for: .tabBar)
         #endif
         .sheet(isPresented: $showShareSheet) {
             if let post = selectedPost {
@@ -89,6 +88,9 @@ struct ProfileView: View {
                 timestamp: post.timestamp
             ))
         }
+        #if os(iOS)
+        .toolbarVisibility(.visible, for: .tabBar)
+        #endif
     }
 
     private var spaceBannerSection: some View {
@@ -574,44 +576,57 @@ struct ProfileView: View {
                                 }
                                 .buttonStyle(.plain)
 
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text(author.withoutUsernamePrefix)
-                                        .font(.system(size: 16, weight: .semibold))
-                                        .foregroundStyle(Theme.textPrimary)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text(author.withoutUsernamePrefix)
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .foregroundStyle(Theme.textPrimary)
+
+                                        Spacer()
+
+                                        Text(displayTimestamp.timeAgo())
+                                            .font(.system(size: 14))
+                                            .foregroundStyle(Color(red: 0.1, green: 1.0, blue: 0.4))
+                                            .padding(.trailing, 8)
+                                    }
+
+                                    // Rich text with highlighting for tickers and hashtags
+                                    RichPostTextView(text: post.text)
+                                        .padding(.trailing, 8)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                 }
-
-                                Spacer()
-
-                                Text(displayTimestamp.timeAgo())
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(Color(red: 0.1, green: 1.0, blue: 0.4)) // Neon green timestamp
                             } else {
                                 // For original posts, show profile owner's username with profile picture
                                 AvatarHelper.avatarView(for: username, size: 40)
                                     .overlay(Circle().stroke(Theme.divider, lineWidth: 1))
 
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text(username.withoutUsernamePrefix)
-                                        .font(.system(size: 16, weight: .semibold))
-                                        .foregroundStyle(Theme.textPrimary)
+                                VStack(alignment: .leading, spacing: 4) {
+                                    HStack {
+                                        Text(username.withoutUsernamePrefix)
+                                            .font(.system(size: 16, weight: .semibold))
+                                            .foregroundStyle(Theme.textPrimary)
+
+                                        Spacer()
+
+                                        Text(displayTimestamp.timeAgo())
+                                            .font(.system(size: 14))
+                                            .foregroundStyle(Color(red: 0.1, green: 1.0, blue: 0.4))
+                                            .padding(.trailing, 8)
+                                    }
+
+                                    // Rich text with highlighting for tickers and hashtags
+                                    RichPostTextView(text: post.text)
+                                        .padding(.trailing, 8)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                 }
-
-                                Spacer()
-
-                                Text(displayTimestamp.timeAgo())
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(Color(red: 0.1, green: 1.0, blue: 0.4)) // Neon green timestamp
                             }
                         }
-
-                    // Rich text with highlighting for tickers and hashtags
-                    RichPostTextView(text: post.text)
-                        .frame(maxWidth: .infinity, alignment: .leading)
 
                     // Chart preview if post contains stock ticker
                     if let firstTicker = PostTextParser.extractStockTickers(from: post.text).first {
                         CompactChartPreview(symbol: firstTicker)
-                            .padding(.top, 8)
+                            .padding(.leading, 52)  // 40 (avatar width) + 12 (spacing)
+                            .padding(.trailing, 8)
                     }
 
                     // Engagement buttons
@@ -653,11 +668,14 @@ struct ProfileView: View {
                                 .foregroundStyle(Theme.textSecondary)
                         }
                         .buttonStyle(.plain)
+                        .padding(.trailing, 8)
                     }
+                    .padding(.leading, 52)  // 40 (avatar width) + 12 (spacing)
                 }
         }
         .buttonStyle(.plain)
-        .padding(16)
+        .padding(.horizontal, 4)
+        .padding(.vertical, 16)
         .background(Theme.bg)
         .overlay(
             Rectangle()

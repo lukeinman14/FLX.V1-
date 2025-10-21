@@ -29,7 +29,7 @@ struct FeedRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Header with avatar, username, and timestamp
+            // Header with avatar and username
             HStack(alignment: .top, spacing: 12) {
                 Button(action: {
                     onProfileTap?()
@@ -40,27 +40,32 @@ struct FeedRow: View {
                         .overlay(Circle().stroke(Theme.divider, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
-                
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(username)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Theme.textPrimary)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(username.withoutUsernamePrefix)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Theme.textPrimary)
+
+                        Spacer()
+
+                        Text(timestamp.timeAgo())
+                            .font(.system(size: 14))
+                            .foregroundStyle(AppSettings.shared.isDarkMode ? Color(red: 0.1, green: 1.0, blue: 0.4) : Theme.textSecondary)
+                            .padding(.trailing, 8)
+                    }
 
                     // Rich text with stock ticker highlighting and embedded charts
                     RichPostTextView(text: text)
+                        .padding(.trailing, 8)
                 }
-
-                Spacer()
-
-                Text(timestamp.timeAgo())
-                    .font(.system(size: 14))
-                    .foregroundStyle(Color(red: 0.1, green: 1.0, blue: 0.4)) // Neon green timestamp
             }
 
             // Chart preview if post contains stock ticker
             if let firstTicker = stockTickers.first {
                 CompactChartPreview(symbol: firstTicker)
-                    .padding(.top, 8)
+                    .padding(.leading, 56)  // 44 (avatar width) + 12 (spacing)
+                    .padding(.trailing, 8)
             }
 
             // Engagement buttons
@@ -103,13 +108,43 @@ struct FeedRow: View {
                         .foregroundStyle(Theme.textSecondary)
                 }
                 .buttonStyle(.plain)
+                .padding(.trailing, 8)
             }
+            .padding(.leading, 56)  // 44 (avatar width) + 12 (spacing)
 
-            Divider().background(Theme.divider)
         }
-        .padding(.horizontal, 16)
+        .padding(.horizontal, 4)
         .padding(.vertical, 16)
-        .background(Theme.bg)
+        .background(
+            Group {
+                if AppSettings.shared.isDarkMode {
+                    Theme.surface
+                } else {
+                    ZStack {
+                        // Bright white base background
+                        Color.white.opacity(0.95)
+
+                        // Subtle blur layer for glass effect
+                        Color.clear
+                            .background(.ultraThinMaterial)
+                            .opacity(0.25)
+                    }
+                }
+            }
+        )
+        .shadow(
+            color: AppSettings.shared.isDarkMode ? Theme.accent.opacity(0.08) : Color.black.opacity(0.06),
+            radius: 12,
+            x: 0,
+            y: 6
+        )
+        .shadow(
+            color: AppSettings.shared.isDarkMode ? Theme.accent.opacity(0.04) : Color.black.opacity(0.04),
+            radius: 4,
+            x: 0,
+            y: 2
+        )
+        .padding(.vertical, 8)
         .sheet(isPresented: $showShareSheet) {
             ShareSheet(
                 postURL: "https://flex.app/post/\(username)/\(UUID().uuidString)",

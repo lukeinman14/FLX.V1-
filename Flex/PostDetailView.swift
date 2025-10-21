@@ -21,7 +21,7 @@ struct PostDetailView: View {
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 0) {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(alignment: .top, spacing: 12) {
                             Button(action: {
@@ -117,9 +117,55 @@ struct PostDetailView: View {
                     }
                     .padding(16)
                     .background(RoundedRectangle(cornerRadius: 16).fill(Theme.surface))
-                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.divider, lineWidth: 1))
+                    .overlay(
+                        Group {
+                            if AppSettings.shared.isDarkMode {
+                                RoundedRectangle(cornerRadius: 16)
+                                    .strokeBorder(
+                                        LinearGradient(
+                                            colors: [
+                                                Color(red: 0.40, green: 0.85, blue: 0.77).opacity(0.3),
+                                                Color(red: 0.53, green: 0.95, blue: 0.83).opacity(0.2),
+                                                Color(red: 0.40, green: 0.85, blue: 0.77).opacity(0.15),
+                                                Color(red: 0.53, green: 0.95, blue: 0.83).opacity(0.2),
+                                                Color(red: 0.40, green: 0.85, blue: 0.77).opacity(0.3)
+                                            ],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1.5
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 15.5)
+                                            .strokeBorder(
+                                                LinearGradient(
+                                                    colors: [
+                                                        Theme.accentMuted.opacity(0.4),
+                                                        Theme.accent.opacity(0.1),
+                                                        Theme.accentMuted.opacity(0.2)
+                                                    ],
+                                                    startPoint: .top,
+                                                    endPoint: .bottom
+                                                ),
+                                                lineWidth: 1
+                                            )
+                                            .padding(0.5)
+                                    )
+                            } else {
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Theme.divider, lineWidth: 1)
+                            }
+                        }
+                    )
+                    .shadow(
+                        color: AppSettings.shared.isDarkMode ? Theme.accent.opacity(0.08) : .clear,
+                        radius: 8,
+                        x: 0,
+                        y: 4
+                    )
+                    .padding(.bottom, 20)
 
-                    Divider().background(Theme.divider)
+                    Divider().background(Theme.divider).padding(.bottom, 10)
 
                     // Replies section header
                     HStack {
@@ -128,8 +174,7 @@ struct PostDetailView: View {
                             .foregroundStyle(Theme.textPrimary)
                         Spacer()
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
+                    .padding(.bottom, 4)
 
                     ForEach(comments) { c in
                         Button(action: {
@@ -179,10 +224,13 @@ struct PostDetailView: View {
                                 }
                                 .padding(.leading, 44)
                             }
-                            .padding(.vertical, 12)
-                            .padding(.horizontal, 16)
-                            .background(Theme.surface)
-                            .overlay(Rectangle().frame(height: 1).foregroundStyle(Theme.divider), alignment: .bottom)
+                            .padding(12)
+                            .background(Theme.bg)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Theme.divider, lineWidth: 1)
+                            )
+                            .padding(.vertical, 2)
                         }
                         .buttonStyle(.plain)
                     }

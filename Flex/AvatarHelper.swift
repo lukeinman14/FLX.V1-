@@ -4,6 +4,7 @@ import SwiftUI
 struct AvatarHelper {
 
     /// Returns a unique avatar view for a given username
+    /// Every user gets assigned one and only one punk image based on their username
     static func avatarView(for username: String, size: CGFloat = 40) -> some View {
         let imageName = getPunkImageName(for: username)
 
@@ -35,6 +36,7 @@ struct AvatarHelper {
 
     /// Maps username to punk image asset name
     private static func getPunkImageName(for username: String) -> String {
+        // Predefined mapping for known users
         let imageMap: [String: String] = [
             "u/You": "punk-you",
             "u/CryptoWhale": "punk-cryptowhale",
@@ -63,7 +65,55 @@ struct AvatarHelper {
             "u/ForexTrader": "punk-forextrader"
         ]
 
-        return imageMap[username] ?? "punk-you"  // Default to "You" punk if not found
+        // If user has a predefined punk, return it
+        if let punkImage = imageMap[username] {
+            return punkImage
+        }
+
+        // For unmapped users, deterministically assign a unique punk based on username hash
+        // All available punk images in the asset folder
+        let allPunkImages = [
+            "punk-you",
+            "punk-cryptowhale",
+            "punk-bytewhale",
+            "punk-quantjunkie",
+            "punk-moontrader",
+            "punk-techbull",
+            "punk-diamondhands",
+            "punk-anonfin",
+            "punk-bytenomad",
+            "punk-spicetrader",
+            "punk-algoking",
+            "punk-valueinvestor",
+            "punk-wsbdegenerate",
+            "punk-definininja",
+            "punk-swingmaster",
+            "punk-beargang",
+            "punk-dividenddaddy",
+            "punk-nftcollector",
+            "punk-macrotrader",
+            "punk-pennystockpro",
+            "punk-cryptominer",
+            "punk-thetagang",
+            "punk-growthhacker",
+            "punk-realestatebull",
+            "punk-forextrader"
+        ]
+
+        // Use deterministic hash function based on username characters
+        // This ensures the same username ALWAYS gets the same punk image
+        let punkIndex = deterministicHash(for: username) % allPunkImages.count
+        return allPunkImages[punkIndex]
+    }
+
+    /// Creates a deterministic hash from a username string
+    /// Unlike Swift's hashValue, this will always return the same value for the same input
+    private static func deterministicHash(for string: String) -> Int {
+        var hash = 0
+        for char in string.unicodeScalars {
+            hash = (hash &* 31) &+ Int(char.value)
+        }
+        return abs(hash)
     }
 
     private struct AvatarStyle {

@@ -37,7 +37,6 @@ struct MyProfileView: View {
         .navigationBarHidden(true)
         #if os(iOS)
         .ignoresSafeArea(edges: .top)
-        .toolbarVisibility(.visible, for: .tabBar)
         #endif
         .sheet(isPresented: $showShareSheet) {
             if let post = selectedPost {
@@ -52,7 +51,7 @@ struct MyProfileView: View {
         }
         .navigationDestination(item: $navigateToPost) { post in
             PostDetailView(post: Post(
-                author: User(handle: "u/You", avatar: "person", score: 0),
+                author: User(handle: player.profile.username, avatar: "person", score: 0),
                 text: post.text,
                 upvotes: post.likes,
                 comments: [],
@@ -60,6 +59,9 @@ struct MyProfileView: View {
                 timestamp: post.timestamp
             ))
         }
+        #if os(iOS)
+        .toolbarVisibility(.visible, for: .tabBar)
+        #endif
     }
 
     private var spaceBannerSection: some View {
@@ -129,7 +131,7 @@ struct MyProfileView: View {
                 VStack(spacing: 12) {
                     // Username with verification checkmark
                     HStack(spacing: 8) {
-                        Text(user.username)
+                        Text(user.username.withoutUsernamePrefix)
                             .font(.system(size: 24, weight: .bold))
                             .foregroundStyle(Theme.textPrimary)
                         
@@ -210,7 +212,7 @@ struct MyProfileView: View {
                         Text(tab.rawValue)
                             .font(.system(size: 16, weight: .medium))
                             .foregroundStyle(selectedTab == tab ? Theme.textPrimary : Theme.textSecondary)
-                        
+
                         Rectangle()
                             .fill(selectedTab == tab ? Theme.accent : Color.clear)
                             .frame(height: 2)
@@ -220,7 +222,6 @@ struct MyProfileView: View {
             }
         }
         .padding(.horizontal, 16)
-        .padding(.top, 16)
         .background(Theme.bg)
         .overlay(
             Rectangle()
@@ -228,6 +229,7 @@ struct MyProfileView: View {
                 .frame(height: 1),
             alignment: .bottom
         )
+        .offset(y: -16)
     }
 
     private var contentSection: some View {
@@ -241,6 +243,7 @@ struct MyProfileView: View {
                 mediaContent
             }
         }
+        .offset(y: -16)
     }
 
     // Combined timeline of original posts and reposts, sorted chronologically
@@ -258,8 +261,8 @@ struct MyProfileView: View {
             )))
         }
 
-        // Add reposts (only those reposted by "u/You")
-        for repost in repostManager.repostedPosts where repost.repostedBy == "u/You" {
+        // Add reposts (only those reposted by the current user)
+        for repost in repostManager.repostedPosts where repost.repostedBy == player.profile.username {
             timeline.append(.repost(repost))
         }
 
@@ -340,44 +343,57 @@ struct MyProfileView: View {
                         }
                         .buttonStyle(.plain)
 
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(author.withoutUsernamePrefix)
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(Theme.textPrimary)
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text(author.withoutUsernamePrefix)
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(Theme.textPrimary)
+
+                                Spacer()
+
+                                Text(displayTimestamp.timeAgo())
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(Color(red: 0.1, green: 1.0, blue: 0.4))
+                                    .padding(.trailing, 8)
+                            }
+
+                            // Rich text with highlighting for tickers and hashtags
+                            RichPostTextView(text: post.text)
+                                .padding(.trailing, 8)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
-
-                        Spacer()
-
-                        Text(displayTimestamp.timeAgo())
-                            .font(.system(size: 14))
-                            .foregroundStyle(Color(red: 0.1, green: 1.0, blue: 0.4)) // Neon green timestamp
                     } else {
-                        // For original posts, show "You" with profile picture
-                        AvatarHelper.avatarView(for: "u/You", size: 40)
+                        // For original posts, show profile picture
+                        AvatarHelper.avatarView(for: player.profile.username, size: 40)
                             .overlay(Circle().stroke(Theme.divider, lineWidth: 1))
 
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("You")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(Theme.textPrimary)
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack {
+                                Text(player.profile.username.withoutUsernamePrefix)
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(Theme.textPrimary)
+
+                                Spacer()
+
+                                Text(displayTimestamp.timeAgo())
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(Color(red: 0.1, green: 1.0, blue: 0.4))
+                                    .padding(.trailing, 8)
+                            }
+
+                            // Rich text with highlighting for tickers and hashtags
+                            RichPostTextView(text: post.text)
+                                .padding(.trailing, 8)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
-
-                        Spacer()
-
-                        Text(displayTimestamp.timeAgo())
-                            .font(.system(size: 14))
-                            .foregroundStyle(Color(red: 0.1, green: 1.0, blue: 0.4)) // Neon green timestamp
                     }
                 }
-
-            // Rich text with highlighting for tickers and hashtags
-            RichPostTextView(text: post.text)
-                .frame(maxWidth: .infinity, alignment: .leading)
 
             // Chart preview if post contains stock ticker
             if let firstTicker = PostTextParser.extractStockTickers(from: post.text).first {
                 CompactChartPreview(symbol: firstTicker)
-                    .padding(.top, 8)
+                    .padding(.leading, 52)  // 40 (avatar width) + 12 (spacing)
+                    .padding(.trailing, 8)
             }
 
             // Engagement buttons
@@ -401,7 +417,7 @@ struct MyProfileView: View {
                 RepostButton(
                     initialCount: "\(post.reposts)",
                     postText: post.text,
-                    postAuthor: isRepost ? (originalAuthor ?? "u/You") : "u/You",
+                    postAuthor: isRepost ? (originalAuthor ?? player.profile.username) : player.profile.username,
                     postLikes: post.likes,
                     postComments: post.comments,
                     postTimestamp: post.timestamp
@@ -419,11 +435,14 @@ struct MyProfileView: View {
                         .foregroundStyle(Theme.textSecondary)
                 }
                 .buttonStyle(.plain)
+                .padding(.trailing, 8)
             }
+            .padding(.leading, 52)  // 40 (avatar width) + 12 (spacing)
             }
         }
         .buttonStyle(.plain)
-        .padding(16)
+        .padding(.horizontal, 4)
+        .padding(.vertical, 16)
         .background(Theme.bg)
         .overlay(
             Rectangle()

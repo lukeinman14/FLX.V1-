@@ -226,7 +226,6 @@ struct SearchView: View {
         #if os(iOS)
         .toolbarBackground(Theme.bg, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
-        .toolbarVisibility(.visible, for: .tabBar)
         #endif
         .navigationDestination(item: $navigateToTicker) { ticker in
             TickerDetailView(symbol: ticker)
@@ -239,6 +238,9 @@ struct SearchView: View {
                 searchText = initialSearchText
             }
         }
+        #if os(iOS)
+        .toolbarVisibility(.visible, for: .tabBar)
+        #endif
     }
 
     // MARK: - Search Logic
