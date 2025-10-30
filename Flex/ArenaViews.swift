@@ -11,6 +11,7 @@ struct Bet: Identifiable {
 
 struct ArenaListView: View {
     @Environment(PlayerState.self) private var player
+    @Environment(\.colorScheme) private var colorScheme
     @State private var bets: [Bet] = [
         Bet(challenger: "u/AnonWhale", opponent: "u/ByteNomad", xpWager: 250, goal: "Highest % gain this week", daysLeft: 5),
         Bet(challenger: "u/MuadDib", opponent: "u/HarkonnenHold", xpWager: 100, goal: "+3% growth in 7 days", daysLeft: 3)
@@ -21,41 +22,38 @@ struct ArenaListView: View {
         let progressInfo = GamificationModel.demo.nextTierProgress(for: player.profile)
         let currentTier = GamificationModel.demo.currentTier(for: player.profile)
 
-        VStack(spacing: 0) {
-            // Custom title header
-            HStack {
-                Spacer()
-                Text("Activity")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(Theme.textPrimary)
-                Spacer()
-            }
-            .frame(height: 44)
-            .background(Theme.bg)
-
-            header
+        NavigationStack {
             List {
-                Section("Progress") {
-                    progressCard(currentTier: currentTier, progress: progressInfo.progress, next: progressInfo.next)
-                        .listRowBackground(Theme.bg)
-                        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                Section {
+                    NetWorthChart(
+                        currentNetWorth: player.profile.netWorthUSD,
+                        nextTierThreshold: progressInfo.next?.minNetWorth ?? 100_000,
+                        nextTierName: progressInfo.next?.name ?? "Gold"
+                    )
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                    .listRowSeparator(.hidden)
                 }
-                
+
                 Section("Your Holdings") {
                     ForEach([Holding(symbol: "AAPL", amount: "120 sh", value: "$22k"), Holding(symbol: "BTC", amount: "0.8", value: "$52k")]) { h in
                         NavigationLink { StockChatView(symbol: h.symbol) } label: {
                             HStack {
-                                Text(h.symbol).font(Theme.bodyFont()).foregroundStyle(Theme.textPrimary)
+                                Text(h.symbol).font(Theme.bodyFont().weight(.semibold)).foregroundStyle(Theme.textPrimary)
                                 Spacer()
                                 Text(h.amount).font(Theme.smallFont()).foregroundStyle(Theme.textSecondary)
                                 Text(h.value).font(Theme.bodyFont()).foregroundStyle(Theme.accentMuted)
                             }
-                            .padding(.vertical, 10)
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 16)
                         }
-                        .listRowBackground(Theme.bg)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .listRowBackground(Color.clear)
+                        .background(liquidGlassRoundedRect(cornerRadius: 12))
+                        .listRowSeparator(.hidden)
                     }
                 }
-                
+
                 Section("Active Bets") {
                     ForEach(bets) { bet in
                         NavigationLink {
@@ -68,17 +66,21 @@ struct ArenaListView: View {
                                     .font(.system(size: 22, weight: .semibold))
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("\(bet.challenger) vs \(bet.opponent)")
-                                        .font(Theme.bodyFont()).foregroundStyle(Theme.textPrimary)
+                                        .font(Theme.bodyFont().weight(.semibold)).foregroundStyle(Theme.textPrimary)
                                     Text(bet.goal)
                                         .font(Theme.smallFont()).foregroundStyle(Theme.textSecondary)
                                 }
                                 Spacer()
                                 Text("\(bet.xpWager) XP")
-                                    .font(Theme.smallFont()).foregroundStyle(Theme.accentMuted)
+                                    .font(Theme.smallFont().weight(.semibold)).foregroundStyle(Theme.accentMuted)
                             }
-                            .padding(.vertical, 6)
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 16)
                         }
-                        .listRowBackground(Theme.bg)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 16))
+                        .listRowBackground(Color.clear)
+                        .background(liquidGlassRoundedRect(cornerRadius: 12))
+                        .listRowSeparator(.hidden)
                     }
                 }
             }
@@ -89,17 +91,85 @@ struct ArenaListView: View {
             #endif
             .scrollContentBackground(.hidden)
             .background(Theme.bg)
+            .overlay(alignment: .top) {
+                // Full-screen gradient blur from top of screen down
+                VStack(spacing: 0) {
+                    // Graduated blur layers - stronger at top, weaker at bottom
+                    ZStack {
+                        // Layer 1: Strong blur at top (most intense)
+                        LinearGradient(
+                            colors: [
+                                Theme.bg,
+                                Theme.bg,
+                                Theme.bg.opacity(0.95),
+                                Color.clear
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .blur(radius: 50)
+                        .frame(height: 80)
+                        .offset(y: 0)
 
-            Button { showCreate = true } label: {
-                Label("Create XP Wager", systemImage: "plus.circle.fill")
-                    .foregroundStyle(Theme.accentMuted)
-                    .font(Theme.headingFont())
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(RoundedRectangle(cornerRadius: 16).fill(Theme.surface).overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.divider, lineWidth: 1)))
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 12)
+                        // Layer 2: Medium blur in middle
+                        LinearGradient(
+                            colors: [
+                                Theme.bg.opacity(0.85),
+                                Theme.bg.opacity(0.70),
+                                Theme.bg.opacity(0.45),
+                                Color.clear
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .blur(radius: 25)
+                        .frame(height: 120)
+                        .offset(y: 20)
+
+                        // Layer 3: Light blur near bottom
+                        LinearGradient(
+                            colors: [
+                                Theme.bg.opacity(0.35),
+                                Theme.bg.opacity(0.20),
+                                Theme.bg.opacity(0.08),
+                                Color.clear
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .blur(radius: 8)
+                        .frame(height: 160)
+                        .offset(y: 0)
+                    }
+                    .frame(height: 160)
+
+                    Spacer()
+                }
+                .ignoresSafeArea(edges: .top)
+                .allowsHitTesting(false)
             }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                VStack(spacing: 0) {
+                    // Title header
+                    HStack {
+                        Spacer()
+                        Text("Activity")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(.white)
+                            .shadow(color: .black.opacity(0.2), radius: 1, x: 0, y: 1)
+                        Spacer()
+                    }
+                    .frame(height: 52)
+
+                    // Header badges (500 XP, 3 day streak, check-in)
+                    header
+                }
+            }
+            .navigationTitle("Activity")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarHidden(true)
+            #endif
         }
         .background(Theme.bg.ignoresSafeArea())
         .sheet(isPresented: $showCreate) {
@@ -111,12 +181,6 @@ struct ArenaListView: View {
             .presentationDetents([.medium])
             #endif
         }
-        .navigationTitle("Activity")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Theme.bg, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
-        #endif
     }
 
     private var header: some View {
@@ -128,11 +192,10 @@ struct ArenaListView: View {
                 .font(Theme.smallFont())
                 .foregroundStyle(Theme.accentMuted)
                 .padding(8)
-                .background(RoundedRectangle(cornerRadius: 10).stroke(Theme.divider, lineWidth: 1))
+                .background(liquidGlassRoundedRect(cornerRadius: 10))
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
-        .background(Theme.bg)
     }
     
     private func progressCard(currentTier: Tier?, progress: Double, next: Tier?) -> some View {
@@ -156,9 +219,45 @@ struct ArenaListView: View {
             .frame(height: 14)
         }
         .padding(16)
-        .background(RoundedRectangle(cornerRadius: 16).fill(Theme.surfaceElevated))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.divider, lineWidth: 1))
+        .background(liquidGlassRoundedRect(cornerRadius: 16))
         .padding(.horizontal, 16)
+    }
+
+    @ViewBuilder
+    private func liquidGlassRoundedRect(cornerRadius: CGFloat) -> some View {
+        ZStack {
+            // Base blur/material for distortion effect (like tab bar)
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .fill(.ultraThinMaterial)
+
+            // Subtle tint overlay
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.12),
+                            Color.white.opacity(0.06)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            // Glass border
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.35),
+                            Color.white.opacity(0.08)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.5
+                )
+        }
+        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 4)
     }
 }
 

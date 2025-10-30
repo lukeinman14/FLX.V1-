@@ -123,3 +123,78 @@ extension View {
         modifier(GlassEffect(radius: radius, material: material))
     }
 }
+
+// MARK: - Gradient Fade Header Overlay
+struct GradientFadeHeaderOverlay: ViewModifier {
+    var headerHeight: CGFloat = 110 // Height of header content to skip
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .top) {
+                VStack(spacing: 0) {
+                    // Spacer to push gradient below header
+                    Color.clear
+                        .frame(height: headerHeight)
+
+                    // Graduated blur layers - stronger at top, weaker at bottom
+                    ZStack {
+                        // Layer 1: Strong blur at top (most intense)
+                        LinearGradient(
+                            colors: [
+                                Theme.bg,
+                                Theme.bg,
+                                Theme.bg.opacity(0.95),
+                                Color.clear
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .blur(radius: 50)
+                        .frame(height: 80)
+                        .offset(y: 0)
+
+                        // Layer 2: Medium blur in middle
+                        LinearGradient(
+                            colors: [
+                                Theme.bg.opacity(0.85),
+                                Theme.bg.opacity(0.70),
+                                Theme.bg.opacity(0.45),
+                                Color.clear
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .blur(radius: 25)
+                        .frame(height: 120)
+                        .offset(y: 20)
+
+                        // Layer 3: Light blur near bottom
+                        LinearGradient(
+                            colors: [
+                                Theme.bg.opacity(0.35),
+                                Theme.bg.opacity(0.20),
+                                Theme.bg.opacity(0.08),
+                                Color.clear
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .blur(radius: 8)
+                        .frame(height: 160)
+                        .offset(y: 0)
+                    }
+                    .frame(height: 160)
+
+                    Spacer()
+                }
+                .ignoresSafeArea(edges: .top)
+                .allowsHitTesting(false)
+            }
+    }
+}
+
+extension View {
+    func gradientFadeHeader(headerHeight: CGFloat = 110) -> some View {
+        modifier(GradientFadeHeaderOverlay(headerHeight: headerHeight))
+    }
+}

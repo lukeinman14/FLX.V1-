@@ -62,16 +62,16 @@ struct GamificationModel {
 
     static let demo: GamificationModel = {
         let tiers: [Tier] = [
-            // Diamond – highest tier (1M+) – bright diamond blue
-            Tier(name: "Diamond", minNetWorth: 1_000_000, maxNetWorth: nil, color: Color(red: 0.70, green: 0.85, blue: 1.00)),
-            // Platinum – high tier (250K - 1M) – platinum silver
-            Tier(name: "Platinum", minNetWorth: 250_000, maxNetWorth: 999_999, color: Color(red: 0.85, green: 0.88, blue: 0.92)),
-            // Gold – mid-high tier (100K - 250K) – rich gold
-            Tier(name: "Gold", minNetWorth: 100_000, maxNetWorth: 249_999, color: Color(red: 0.98, green: 0.85, blue: 0.35)),
+            // Bronze – entry tier (0 - 25K) – bronze brown
+            Tier(name: "Bronze", minNetWorth: 0, maxNetWorth: 24_999, color: Color(red: 0.80, green: 0.50, blue: 0.20)),
             // Silver – mid tier (25K - 100K) – silver gray
             Tier(name: "Silver", minNetWorth: 25_000, maxNetWorth: 99_999, color: Color(red: 0.75, green: 0.78, blue: 0.82)),
-            // Bronze – entry tier (0 - 25K) – bronze brown
-            Tier(name: "Bronze", minNetWorth: 0, maxNetWorth: 24_999, color: Color(red: 0.80, green: 0.50, blue: 0.20))
+            // Gold – mid-high tier (100K - 250K) – rich gold
+            Tier(name: "Gold", minNetWorth: 100_000, maxNetWorth: 249_999, color: Color(red: 0.98, green: 0.85, blue: 0.35)),
+            // Platinum – high tier (250K - 1M) – platinum silver
+            Tier(name: "Platinum", minNetWorth: 250_000, maxNetWorth: 999_999, color: Color(red: 0.85, green: 0.88, blue: 0.92)),
+            // Diamond – highest tier (1M+) – bright diamond blue
+            Tier(name: "Diamond", minNetWorth: 1_000_000, maxNetWorth: nil, color: Color(red: 0.70, green: 0.85, blue: 1.00))
         ]
         return GamificationModel(tiers: tiers)
     }()

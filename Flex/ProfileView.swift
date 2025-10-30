@@ -6,6 +6,7 @@ struct ProfileView: View {
     var username: String
     var accent: Color = Theme.accentMuted
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
 
     // User data manager
     private let userDataManager = UserDataManager.shared
@@ -255,7 +256,7 @@ struct ProfileView: View {
                         .foregroundStyle(Theme.textSecondary)
                 }
                 .padding(16)
-                .background(Theme.surface)
+                .background(liquidGlassBackground(cornerRadius: 0))
                 .overlay(
                     Rectangle()
                         .fill(Theme.divider)
@@ -345,8 +346,7 @@ struct ProfileView: View {
                 }
         }
         .padding(16)
-        .background(RoundedRectangle(cornerRadius: 16).fill(Theme.surfaceElevated))
-        .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.divider, lineWidth: 1))
+        .background(liquidGlassBackground(cornerRadius: 16))
     }
 
     private var timeframePicker: some View {
@@ -369,8 +369,7 @@ struct ProfileView: View {
             }
             .padding()
             .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: 16).fill(Theme.surface))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.divider, lineWidth: 1))
+            .background(liquidGlassBackground(cornerRadius: 16))
 
             VStack(alignment: .leading, spacing: 6) {
                 Text("Tier").font(Theme.smallFont()).foregroundStyle(Theme.textSecondary)
@@ -378,8 +377,7 @@ struct ProfileView: View {
             }
             .padding()
             .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: 16).fill(Theme.surface))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.divider, lineWidth: 1))
+            .background(liquidGlassBackground(cornerRadius: 16))
         }
     }
 
@@ -391,8 +389,7 @@ struct ProfileView: View {
             }
             .padding()
             .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: 16).fill(Theme.surface))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.divider, lineWidth: 1))
+            .background(liquidGlassBackground(cornerRadius: 16))
 
             VStack(alignment: .leading, spacing: 6) {
                 Text("Total XP Won").font(Theme.smallFont()).foregroundStyle(Theme.textSecondary)
@@ -400,8 +397,7 @@ struct ProfileView: View {
             }
             .padding()
             .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: 16).fill(Theme.surface))
-            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.divider, lineWidth: 1))
+            .background(liquidGlassBackground(cornerRadius: 16))
         }
     }
 
@@ -453,8 +449,7 @@ struct ProfileView: View {
                     }
                 }
                 .padding(16)
-                .background(RoundedRectangle(cornerRadius: 16).fill(Theme.surfaceElevated))
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Theme.divider, lineWidth: 1))
+                .background(liquidGlassBackground(cornerRadius: 16))
             }
         }
     }
@@ -481,12 +476,117 @@ struct ProfileView: View {
                     }
                     .padding(.vertical, 10)
                     .padding(.horizontal, 16)
-                    .background(Theme.surface)
+                    .background(liquidGlassBackground(cornerRadius: 12))
                     .overlay(Rectangle().frame(height: 1).foregroundStyle(Theme.divider), alignment: .bottom)
                 }
             }
         }
         .background(Theme.bg)
+    }
+
+    // MARK: - Liquid Glass Helper
+
+    @ViewBuilder
+    private func liquidGlassBackground(cornerRadius: CGFloat) -> some View {
+        if colorScheme == .dark {
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.08),
+                            Color.white.opacity(0.04)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .fill(.ultraThinMaterial.opacity(0.5))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.3),
+                                    Color.white.opacity(0.1),
+                                    Color.white.opacity(0.05)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1.5
+                        )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.1),
+                                    Color.clear
+                                ],
+                                startPoint: .top,
+                                endPoint: .center
+                            ),
+                            lineWidth: 0.5
+                        )
+                        .blur(radius: 0.5)
+                )
+                .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
+                .shadow(color: Color.white.opacity(0.05), radius: 2, x: 0, y: -1)
+        } else {
+            RoundedRectangle(cornerRadius: cornerRadius)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color(red: 0.72, green: 0.72, blue: 0.74, opacity: 0.85),
+                            Color(red: 0.67, green: 0.67, blue: 0.69, opacity: 0.90),
+                            Color(red: 0.64, green: 0.64, blue: 0.66, opacity: 0.95)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .fill(.ultraThinMaterial.opacity(0.4))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.7),
+                                    Color.white.opacity(0.3),
+                                    Color.white.opacity(0.1)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1.5
+                        )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: cornerRadius)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.4),
+                                    Color.clear
+                                ],
+                                startPoint: .top,
+                                endPoint: .center
+                            ),
+                            lineWidth: 1
+                        )
+                        .blur(radius: 1)
+                )
+                .shadow(color: Color.black.opacity(0.12), radius: 10, x: 0, y: 5)
+                .shadow(color: Color.black.opacity(0.08), radius: 4, x: 0, y: 2)
+                .shadow(color: Color.white.opacity(0.4), radius: 1, x: 0, y: -1)
+        }
     }
 
     // MARK: - Tab Content

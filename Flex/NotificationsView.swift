@@ -11,6 +11,7 @@ struct NotificationItem: Identifiable {
 
 struct NotificationsView: View {
     @State private var selection: NotificationItem.Category = .all
+    @Environment(\.colorScheme) private var colorScheme
 
     private var items: [NotificationItem] = [
         .init(icon: "swords", title: "u/MuadDib and u/HarkonnenHold just entered Arena Mode", subtitle: "Arena Challenge Activated – First to +3% growth wins.", category: .all),
@@ -21,19 +22,7 @@ struct NotificationsView: View {
     ]
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Custom header
-            HStack {
-                Spacer()
-                Text("Notifications")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(Theme.textPrimary)
-                Spacer()
-            }
-            .frame(height: 44)
-            .background(Theme.bg)
-
-            segmented
+        NavigationStack {
             List(filtered(items)) { item in
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: item.icon)
@@ -53,47 +42,158 @@ struct NotificationsView: View {
                     }
                 }
                 .padding(.vertical, 8)
-                .listRowBackground(Theme.bg)
+                .listRowBackground(Color.clear)
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(Theme.bg)
+            .overlay(alignment: .top) {
+                // Full-screen gradient blur from top of screen down
+                VStack(spacing: 0) {
+                    // Graduated blur layers - stronger at top, weaker at bottom
+                    ZStack {
+                        // Layer 1: Strong blur at top (most intense)
+                        LinearGradient(
+                            colors: [
+                                Theme.bg,
+                                Theme.bg,
+                                Theme.bg.opacity(0.95),
+                                Color.clear
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .blur(radius: 50)
+                        .frame(height: 80)
+                        .offset(y: 0)
+
+                        // Layer 2: Medium blur in middle
+                        LinearGradient(
+                            colors: [
+                                Theme.bg.opacity(0.85),
+                                Theme.bg.opacity(0.70),
+                                Theme.bg.opacity(0.45),
+                                Color.clear
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .blur(radius: 25)
+                        .frame(height: 120)
+                        .offset(y: 20)
+
+                        // Layer 3: Light blur near bottom
+                        LinearGradient(
+                            colors: [
+                                Theme.bg.opacity(0.35),
+                                Theme.bg.opacity(0.20),
+                                Theme.bg.opacity(0.08),
+                                Color.clear
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .blur(radius: 8)
+                        .frame(height: 160)
+                        .offset(y: 0)
+                    }
+                    .frame(height: 160)
+
+                    Spacer()
+                }
+                .ignoresSafeArea(edges: .top)
+                .allowsHitTesting(false)
+            }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                VStack(spacing: 0) {
+                    // Title header
+                    HStack {
+                        Spacer()
+                        Text("Notifications")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(.white)
+                            .shadow(color: .black.opacity(0.2), radius: 1, x: 0, y: 1)
+                        Spacer()
+                    }
+                    .frame(height: 52)
+
+                    // Segmented buttons with liquid glass styling
+                    segmented
+                }
+            }
+            .navigationTitle("Notifications")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarHidden(true)
+            #endif
         }
-        .navigationTitle("Notifications")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Theme.bg, for: .navigationBar)
-        .toolbarColorScheme(.dark, for: .navigationBar)
-        #endif
         .background(Theme.bg.ignoresSafeArea())
     }
 
     private var segmented: some View {
-        HStack(spacing: 24) {
+        HStack(spacing: 12) {
             seg("All", .all)
             seg("Mentions", .mentions)
             seg("Rank", .rank)
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-        .background(Theme.bg)
-        .overlay(Rectangle().frame(height: 1).foregroundStyle(Theme.divider), alignment: .bottom)
+        .padding(.vertical, 12)
     }
 
     private func seg(_ title: String, _ cat: NotificationItem.Category) -> some View {
         Button {
             withAnimation(.easeInOut(duration: 0.2)) { selection = cat }
         } label: {
-            VStack(spacing: 6) {
-                Text(title)
-                    .font(Theme.headingFont())
-                    .foregroundStyle(selection == cat ? Theme.accentMuted : Theme.textSecondary)
-                Rectangle()
-                    .fill(selection == cat ? Theme.accentMuted : .clear)
-                    .frame(height: 2)
-                    .frame(maxWidth: .infinity)
-            }
+            Text(title)
+                .font(.system(size: 14, weight: selection == cat ? .semibold : .medium))
+                .foregroundStyle(selection == cat ? (colorScheme == .dark ? .white : Theme.textPrimary) : Theme.textSecondary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(
+                    Group {
+                        if selection == cat {
+                            liquidGlassButton()
+                        }
+                    }
+                )
         }
+    }
+
+    @ViewBuilder
+    private func liquidGlassButton() -> some View {
+        ZStack {
+            // Base blur/material for distortion effect (like tab bar)
+            Capsule()
+                .fill(.ultraThinMaterial)
+
+            // Subtle tint overlay
+            Capsule()
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.12),
+                            Color.white.opacity(0.06)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+
+            // Glass border
+            Capsule()
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.35),
+                            Color.white.opacity(0.08)
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 1.5
+                )
+        }
+        .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 4)
     }
 
     private func filtered(_ items: [NotificationItem]) -> [NotificationItem] {

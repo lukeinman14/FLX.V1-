@@ -33,50 +33,152 @@ struct HomeWithDrawer: View {
             #if os(iOS)
             .navigationBarHidden(true)
             #endif
-            .safeAreaInset(edge: .top, spacing: 0) {
+            .overlay(alignment: .top) {
+                // Full-screen gradient blur from top of screen down
                 if !isDrawerOpen {
                     VStack(spacing: 0) {
-                        HStack {
-                            // Profile photo button
-                            Button(action: { withAnimation(.spring()) { isDrawerOpen = true } }) {
-                                AvatarHelper.avatarView(for: "u/You", size: 36)
-                                    .overlay(
-                                        Circle()
-                                            .stroke(Theme.divider, lineWidth: 2)
-                                    )
-                            }
-                            .padding(.leading, 16)
-
-                            Spacer()
-
-                            // Title in center
-                            Text("Home Feed")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(Theme.textPrimary)
-
-                            Spacer()
-
-                            // Search button
-                            Button(action: { path.append(HomeDestination.search) }) {
-                                Image(systemName: "magnifyingglass")
-                                    .font(.system(size: 20, weight: .medium))
-                                    .foregroundStyle(Theme.textPrimary)
-                                    .frame(width: 32, height: 32)
-                            }
-                            .padding(.trailing, 16)
-                        }
-                        .frame(height: 44)
-
-                        // Separator line
-                        Rectangle()
-                            .fill(
-                                AppSettings.shared.isDarkMode
-                                    ? Theme.accentMuted.opacity(0.3)
-                                    : Color(red: 0.18, green: 0.50, blue: 0.22).opacity(0.3)
+                        // Graduated blur layers - stronger at top, weaker at bottom
+                        ZStack {
+                            // Layer 1: Strong blur at top (most intense)
+                            LinearGradient(
+                                colors: [
+                                    Theme.bg,
+                                    Theme.bg,
+                                    Theme.bg,
+                                    Theme.bg.opacity(0.98),
+                                    Theme.bg.opacity(0.85),
+                                    Color.clear
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
                             )
-                            .frame(height: 1)
+                            .blur(radius: 60)
+                            .frame(height: 100)
+                            .offset(y: 0)
+
+                            // Layer 2: Medium blur in middle
+                            LinearGradient(
+                                colors: [
+                                    Theme.bg.opacity(0.92),
+                                    Theme.bg.opacity(0.80),
+                                    Theme.bg.opacity(0.65),
+                                    Theme.bg.opacity(0.45),
+                                    Color.clear
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                            .blur(radius: 30)
+                            .frame(height: 140)
+                            .offset(y: 20)
+
+                            // Layer 3: Light blur near bottom
+                            LinearGradient(
+                                colors: [
+                                    Theme.bg.opacity(0.50),
+                                    Theme.bg.opacity(0.35),
+                                    Theme.bg.opacity(0.20),
+                                    Theme.bg.opacity(0.08),
+                                    Color.clear
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                            .blur(radius: 12)
+                            .frame(height: 180)
+                            .offset(y: 0)
+                        }
+                        .frame(height: 180)
+
+                        Spacer()
                     }
-                    .background(Theme.bg)
+                    .ignoresSafeArea(edges: .top)
+                    .allowsHitTesting(false)
+                }
+            }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if !isDrawerOpen {
+                    HStack(spacing: 16) {
+                        // Profile photo button - liquid glass floating
+                        Button(action: { withAnimation(.spring()) { isDrawerOpen = true } }) {
+                            AvatarHelper.avatarView(for: "u/You", size: 36)
+                                .overlay(
+                                    Circle()
+                                        .stroke(
+                                            LinearGradient(
+                                                colors: [
+                                                    Color.white.opacity(0.4),
+                                                    Color.white.opacity(0.1)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 2
+                                        )
+                                )
+                                .background(
+                                    Circle()
+                                        .fill(.ultraThinMaterial.opacity(0.3))
+                                )
+                                .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
+                        }
+                        .padding(.leading, 16)
+
+                        Spacer()
+
+                        // Title in center
+                        Text("Home Feed")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .shadow(color: Color.black.opacity(0.3), radius: 4, x: 0, y: 2)
+
+                        Spacer()
+
+                        // Search button - liquid glass with distortion effect like tab bar
+                        Button(action: { path.append(HomeDestination.search) }) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundStyle(.white)
+                                .frame(width: 40, height: 40)
+                                .background(
+                                    ZStack {
+                                        // Base blur/material for distortion effect
+                                        Circle()
+                                            .fill(.ultraThinMaterial)
+
+                                        // Subtle tint overlay
+                                        Circle()
+                                            .fill(
+                                                LinearGradient(
+                                                    colors: [
+                                                        Color.white.opacity(0.12),
+                                                        Color.white.opacity(0.06)
+                                                    ],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+
+                                        // Glass border
+                                        Circle()
+                                            .stroke(
+                                                LinearGradient(
+                                                    colors: [
+                                                        Color.white.opacity(0.35),
+                                                        Color.white.opacity(0.08)
+                                                    ],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                ),
+                                                lineWidth: 1.5
+                                            )
+                                    }
+                                )
+                                .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 4)
+                        }
+                        .padding(.trailing, 16)
+                    }
+                    .frame(height: 52)
                 }
             }
         }
@@ -181,7 +283,6 @@ struct RootTabs: View {
 
         // Use system material for blur effect
         let blurEffect = UIBlurEffect(style: .systemUltraThinMaterial)
-        let blurView = UIVisualEffectView(effect: blurEffect)
 
         appearance.backgroundEffect = blurEffect
         appearance.backgroundColor = .clear
@@ -193,38 +294,57 @@ struct RootTabs: View {
     }
 }
 
+// Mock feed post model
+private struct FeedPost: Identifiable {
+    let id = UUID()
+    let username: String
+    let avatar: String
+    let text: String
+    let upvotes: Int
+    let comments: String
+    let reposts: String
+    let timestamp: Date
+}
+
 private struct FeedDemo: View {
     @State private var navigateToProfile: String?
     @State private var showPostTypeDrawer = false
+    @State private var posts: [FeedPost] = []
     @Environment(\.tabSelection) private var tabSelection
 
     var body: some View {
         ZStack {
             ScrollView {
                 VStack(spacing: 0) {
-                    NavigationLink { PostDetailView(post: Post(author: User(handle: "u/CryptoWhale", avatar: "person", score: 0), text: "$BTC breaking new highs! Institutional money is flooding in. ETF inflows are absolutely massive. This bull run is just getting started. #Bitcoin #Crypto", upvotes: 8742, comments: [], reposts: 1205, timestamp: Date().addingTimeInterval(-1800))) } label: {
-                        FeedRow(avatar: AnyView(AvatarHelper.avatarView(for: "u/CryptoWhale", size: 44)), username: "u/CryptoWhale", text: TickerFormat.normalizePrefixes(in: "$BTC breaking new highs! Institutional money is flooding in. ETF inflows are absolutely massive. This bull run is just getting started. #Bitcoin #Crypto"), upvoteScore: 8742, comments: "1.2k", reposts: "543", timestamp: Date().addingTimeInterval(-1800), onProfileTap: {
-                            navigateToProfile = "u/CryptoWhale"
-                        })
-                    }
-                    NavigationLink { PostDetailView(post: Post(author: User(handle: "u/ByteWhale", avatar: "person", score: 0), text: "Watching $NVDA today. The momentum feels unreal — heavy volume and IV spike. Could be a setup for a gamma squeeze. What's everyone's play? #AI #Trading", upvotes: 5300, comments: [], reposts: 412, timestamp: Date().addingTimeInterval(-10800))) } label: {
-                        FeedRow(avatar: AnyView(AvatarHelper.avatarView(for: "u/ByteWhale", size: 44)), username: "u/ByteWhale", text: TickerFormat.normalizePrefixes(in: "Watching $NVDA today. The momentum feels unreal — heavy volume and IV spike. Could be a setup for a gamma squeeze. What's everyone's play? #AI #Trading"), upvoteScore: 5300, comments: "412", reposts: "87", timestamp: Date().addingTimeInterval(-10800), onProfileTap: {
-                            navigateToProfile = "u/ByteWhale"
-                        })
-                    }
-                    NavigationLink { PostDetailView(post: Post(author: User(handle: "u/QuantJunkie", avatar: "person.circle.fill", score: 0), text: "$NVDA RSI is already overbought. I'm trimming positions. #TechnicalAnalysis #RiskManagement", upvotes: 856, comments: [], reposts: 112, timestamp: Date().addingTimeInterval(-7200))) } label: {
-                        FeedRow(avatar: AnyView(AvatarHelper.avatarView(for: "u/QuantJunkie", size: 44)), username: "u/QuantJunkie", text: TickerFormat.normalizePrefixes(in: "$NVDA RSI is already overbought. I'm trimming positions. #TechnicalAnalysis #RiskManagement"), upvoteScore: 856, comments: "89", reposts: "43", timestamp: Date().addingTimeInterval(-7200), onProfileTap: {
-                            navigateToProfile = "u/QuantJunkie"
-                        })
-                    }
-                    NavigationLink { PostDetailView(post: Post(author: User(handle: "u/ByteNomad", avatar: "person.circle", score: 0), text: "I can't tell if I'm working for money or if money's working me.", upvotes: 530, comments: [], reposts: 642, timestamp: Date().addingTimeInterval(-3600))) } label: {
-                        FeedRow(avatar: AnyView(AvatarHelper.avatarView(for: "u/ByteNomad", size: 44)), username: "u/ByteNomad", text: TickerFormat.normalizePrefixes(in: "I can't tell if I'm working for money or if money's working me."), upvoteScore: 530, comments: "1.2k", reposts: "642", onProfileTap: {
-                            navigateToProfile = "u/ByteNomad"
-                        })
+                    ForEach(posts) { post in
+                        NavigationLink {
+                            postDetailView(for: post)
+                        } label: {
+                            FeedRow(
+                                avatar: AnyView(AvatarHelper.avatarView(for: post.username, size: 44)),
+                                username: post.username,
+                                text: TickerFormat.normalizePrefixes(in: post.text),
+                                upvoteScore: post.upvotes,
+                                comments: post.comments,
+                                reposts: post.reposts,
+                                timestamp: post.timestamp,
+                                onProfileTap: {
+                                    navigateToProfile = post.username
+                                }
+                            )
+                        }
                     }
                 }
             }
+            .refreshable {
+                await refreshFeed()
+            }
             .background(Theme.bg)
+            .onAppear {
+                if posts.isEmpty {
+                    posts = generateInitialPosts()
+                }
+            }
 
             // Blur overlay - blurs everything except plus button (below it in z-order)
             if showPostTypeDrawer {
@@ -295,6 +415,18 @@ private struct FeedDemo: View {
         }
     }
 
+    private func postDetailView(for post: FeedPost) -> some View {
+        let repostCount = Int(post.reposts.replacingOccurrences(of: "k", with: "00").replacingOccurrences(of: ".", with: "")) ?? 0
+        return PostDetailView(post: Post(
+            author: User(handle: post.username, avatar: post.avatar, score: 0),
+            text: post.text,
+            upvotes: post.upvotes,
+            comments: [],
+            reposts: repostCount,
+            timestamp: post.timestamp
+        ))
+    }
+
     private func handlePostTypeSelection(_ postType: PostType) {
         switch postType {
         case .thought:
@@ -308,6 +440,78 @@ private struct FeedDemo: View {
             // TODO: Navigate to debate/spaces creator
         }
     }
+
+    // Generate initial feed posts
+    private func generateInitialPosts() -> [FeedPost] {
+        let mockPosts: [(username: String, avatar: String, text: String, upvotes: Int, comments: String, reposts: String, minutesAgo: Double)] = [
+            ("u/CryptoWhale", "person", "$BTC breaking new highs! Institutional money is flooding in. ETF inflows are absolutely massive. This bull run is just getting started. #Bitcoin #Crypto", 8742, "1.2k", "543", 30),
+            ("u/ByteWhale", "person", "Watching $NVDA today. The momentum feels unreal — heavy volume and IV spike. Could be a setup for a gamma squeeze. What's everyone's play? #AI #Trading", 5300, "412", "87", 180),
+            ("u/QuantJunkie", "person.circle.fill", "$NVDA RSI is already overbought. I'm trimming positions. #TechnicalAnalysis #RiskManagement", 856, "89", "43", 120),
+            ("u/ByteNomad", "person.circle", "I can't tell if I'm working for money or if money's working me.", 530, "1.2k", "642", 60),
+            ("u/StockSensei", "person", "$TSLA earnings next week. Expecting a beat on delivery numbers. Loading up on calls. #Tesla #EV", 2341, "234", "156", 240),
+            ("u/DeFiDegen", "person.circle.fill", "Just aped into a new DeFi protocol. 5000% APY can't go wrong, right? Right?? #DeFi #YOLO", 1823, "567", "234", 90),
+            ("u/WallStreetBets", "person", "$SPY puts printing today. The market is finally correcting. Bear gang rise up! #Stocks #Options", 4521, "891", "445", 45),
+            ("u/CryptoMom", "person.circle", "Finally convinced my boomer parents to buy $BTC. We're all going to make it! #Bitcoin #WAGMI", 967, "123", "78", 150),
+            ("u/TechBro99", "person", "$AAPL releasing new AI features next quarter. This is going to be huge for the stock. #Apple #AI", 3456, "445", "289", 300),
+            ("u/DiamondHands", "person.circle.fill", "Been holding $GME for 3 years now. Down 80% but still not selling. Diamond hands forever! #GME #HODL", 6789, "2.1k", "1.3k", 15),
+            ("u/ValueInvestor", "person", "Everyone's chasing memes while I'm building a dividend portfolio. Slow and steady wins the race. #Investing #Dividends", 423, "67", "34", 420),
+            ("u/CryptoKing", "person.circle", "$ETH finally broke resistance! Next stop $5k. The flippening is coming! #Ethereum #Crypto", 5432, "678", "456", 75),
+            ("u/OptionsTrader", "person", "Made 300% on $NVDA calls this week. Sometimes the play just works perfectly. #Options #Trading", 2876, "334", "212", 105),
+            ("u/BeginnerInvestor", "person.circle.fill", "Just opened my first brokerage account. Any tips for a complete beginner? #Investing #NewTrader", 789, "456", "123", 180),
+            ("u/MacroAnalyst", "person", "Fed's next move is crucial. Expecting rates to hold steady but market seems pricing in cuts. #Economics #Fed", 1234, "234", "145", 270),
+            ("u/AltcoinHunter", "person.circle", "Found a gem at 10M market cap. Not sharing the ticker yet. IYKYK #Crypto #Altcoins", 3421, "891", "567", 45),
+            ("u/DayTrader", "person", "Up $15k today scalping $SPY options. This is the best trading day I've had all month! #DayTrading #Options", 2109, "289", "178", 30),
+            ("u/LongTermHODL", "person.circle.fill", "Stop checking prices every 5 minutes. Zoom out. We're still early in this cycle. #Patience #Investing", 4567, "567", "389", 360),
+            ("u/TrendFollower", "person", "$COIN showing massive strength. Breaking out of consolidation. Time to take a position. #Crypto #TA", 1678, "223", "134", 90),
+            ("u/RiskManager", "person.circle", "Remember: proper position sizing and stop losses. Protect your capital first, make gains second. #RiskManagement #Trading", 987, "145", "89", 210)
+        ]
+
+        return mockPosts.map { post in
+            FeedPost(
+                username: post.username,
+                avatar: post.avatar,
+                text: post.text,
+                upvotes: post.upvotes,
+                comments: post.comments,
+                reposts: post.reposts,
+                timestamp: Date().addingTimeInterval(-post.minutesAgo * 60)
+            )
+        }
+    }
+
+    // Refresh feed with new posts
+    private func refreshFeed() async {
+        // Simulate network delay
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+
+        let newPosts = generateNewPosts()
+        await MainActor.run {
+            // Add new posts to the top
+            posts.insert(contentsOf: newPosts, at: 0)
+        }
+    }
+
+    // Generate new posts for refresh
+    private func generateNewPosts() -> [FeedPost] {
+        let freshPosts: [(username: String, avatar: String, text: String, upvotes: Int, comments: String, reposts: String, secondsAgo: Double)] = [
+            ("u/MarketWatch", "person", "BREAKING: $SPY hits new all-time high. Bull market continues! #Stocks #Markets", Int.random(in: 1000...5000), "\(Int.random(in: 50...200))", "\(Int.random(in: 20...100))", Double.random(in: 5...30)),
+            ("u/CryptoNews", "person.circle", "$BTC pumping! Looks like whales are accumulating again. #Bitcoin", Int.random(in: 2000...8000), "\(Int.random(in: 100...500))", "\(Int.random(in: 50...300))", Double.random(in: 10...45)),
+            ("u/TechAnalysis", "person.circle.fill", "$NVDA earnings preview: analysts expecting strong quarter driven by AI demand. #NVIDIA", Int.random(in: 500...3000), "\(Int.random(in: 30...150))", "\(Int.random(in: 20...80))", Double.random(in: 15...60))
+        ]
+
+        return freshPosts.map { post in
+            FeedPost(
+                username: post.username,
+                avatar: post.avatar,
+                text: post.text,
+                upvotes: post.upvotes,
+                comments: post.comments,
+                reposts: post.reposts,
+                timestamp: Date().addingTimeInterval(-post.secondsAgo)
+            )
+        }
+    }
+
 }
 
 private struct MessagesDemo: View {
